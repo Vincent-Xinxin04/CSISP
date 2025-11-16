@@ -8,14 +8,17 @@
     "dev": "pnpm -r --parallel dev",
     "build": "pnpm -r build",
     "test": "pnpm -r test",
-    "format": "eslint . --fix && pnpm prettier --config prettier.json --write . && stylelint '**/*.{css,scss,vue}' --fix",
+    "format": "eslint . --fix && pnpm prettier --write . && stylelint '**/*.{css,scss,vue}' --fix",
     "lint:staged": "lint-staged",
     "dev:admin": "pnpm --filter frontend-admin dev",
     "dev:client": "pnpm --filter frontend-client dev",
     "dev:backend": "pnpm --filter backend dev",
     "build:admin": "pnpm --filter frontend-admin build",
     "build:client": "pnpm --filter frontend-client build",
-    "build:backend": "pnpm --filter backend build"
+    "build:backend": "pnpm --filter backend build",
+    "docs:dev": "pnpm -C docs dev",
+    "docs:build": "pnpm -C docs build",
+    "docs:preview": "pnpm -C docs preview"
   },
   "packageManager": "pnpm@8.15.0",
   "workspaces": [
@@ -34,26 +37,26 @@
     ]
   },
   "devDependencies": {
-    "@eslint/js": "^9.0.0",
+    "@eslint/js": "^9.39.1",
     "@types/eslint-config-prettier": "^6.11.3",
     "@types/node": "^20.19.25",
     "@typescript-eslint/eslint-plugin": "^8.46.4",
     "@typescript-eslint/parser": "^8.46.4",
-    "eslint": "^9.0.0",
+    "eslint": "^9.39.1",
     "eslint-config-prettier": "^9.1.2",
     "eslint-plugin-prettier": "^5.5.4",
-    "eslint-plugin-vue": "^10.0.0",
-    "globals": "^15.0.0",
+    "eslint-plugin-vue": "^10.5.1",
+    "globals": "^15.15.0",
     "husky": "^9.1.7",
     "jiti": "^2.6.1",
     "lint-staged": "^16.2.6",
     "postcss-html": "^1.8.0",
-    "prettier": "^3.2.5",
+    "prettier": "^3.6.2",
     "stylelint": "^16.25.0",
     "stylelint-config-recommended-vue": "^1.6.1",
     "stylelint-config-standard": "^39.0.1",
     "stylelint-config-standard-scss": "^16.0.0",
-    "typescript": "^5.3.3",
+    "typescript": "^5.9.3",
     "typescript-eslint": "^8.46.4"
   }
 }

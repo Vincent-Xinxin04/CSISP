@@ -4,11 +4,14 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "dev": "ts-node app.ts",
+    "dev": "nodemon --exec tsx app.ts",
     "build": "esbuild app.ts --bundle --platform=node --outfile=dist/app.js",
     "start": "node dist/app.js"
   },
   "dependencies": {
+    "@csisp/types": "workspace:^1.0.0",
+    "@types/bcrypt": "^6.0.0",
+    "bcrypt": "^5.1.1",
     "koa": "^2.15.0",
     "pg": "^8.11.3",
     "pg-hstore": "^2.3.4",
@@ -19,6 +22,9 @@
   "devDependencies": {
     "@types/koa": "^3.0.1",
     "esbuild": "^0.19.0",
-    "ts-node": "^10.9.2"
+    "nodemon": "^3.0.0",
+    "sequelize-cli": "^6.6.3",
+    "ts-node": "^10.9.2",
+    "tsx": "^4.0.0"
   }
 }

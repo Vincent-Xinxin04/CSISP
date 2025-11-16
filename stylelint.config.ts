@@ -18,6 +18,11 @@ export default {
     {
       files: ['**/*.vue'],
       customSyntax: 'postcss-html',
+      rules: {
+        // 允许Vue文件中的空style标签
+        'no-empty-source': null,
+        'block-no-empty': null,
+      },
     },
   ],
-}
+};

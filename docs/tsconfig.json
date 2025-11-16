@@ -1,0 +1,10 @@
+{
+  "extends": "../tsconfig.json",
+  "display": "CSISP 文档站点 TypeScript 配置",
+  "compilerOptions": {
+    "rootDir": ".",
+    "noEmit": true
+  },
+  "include": ["**/*.ts", "**/*.d.ts", ".vitepress/**/*"],
+  "exclude": ["node_modules", "dist", ".vitepress/dist", ".vitepress/cache"]
+}

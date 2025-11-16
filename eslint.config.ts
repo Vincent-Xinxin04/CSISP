@@ -1,30 +1,44 @@
-import ts from 'typescript-eslint'
-import vue from 'eslint-plugin-vue'
-import prettierPlugin from 'eslint-plugin-prettier'
-import globals from 'globals'
+import ts from 'typescript-eslint';
+import vue from 'eslint-plugin-vue';
+import prettierPlugin from 'eslint-plugin-prettier';
+import globals from 'globals';
 
 export default [
   {
-    files: ['**/*.{js,mjs,cjs,ts,jsx,tsx,vue}'],
     ignores: [
-      '**/node_modules/',
-      '**/dist/',
-      '**/build/',
-      '**/.dist/',
-      '**/.output/',
-      '**/coverage/',
-      '**/.git/',
-      '**/.vscode/',
-      '**/.idea/',
-      '**/.next/',
-      '**/.nuxt/',
-      '**/.turbo/',
+      '**/node_modules/**',
+      '**/dist/**',
+      '**/build/**',
+      '**/.dist/**',
+      '**/.output/**',
+      '**/coverage/**',
+      '**/.git/**',
+      '**/.vscode/**',
+      '**/.idea/**',
+      '**/.next/**',
+      '**/.nuxt/**',
+      '**/.turbo/**',
+      '**/.cache/**',
       '**/.DS_Store',
       '**/*.log',
       '**/pnpm-lock.yaml',
       '**/package-lock.json',
       '**/yarn.lock',
+      '**/migrations/**',
+      '**/seeders/**',
+      '**/cache/**',
+      'apps/*/migrations/**',
+      'apps/*/seeders/**',
+      'apps/*/dist/**',
+      'apps/*/build/**',
+      'packages/*/dist/**',
+      'packages/*/build/**',
+      'docs/.vitepress/cache/**',
+      'docs/.vitepress/dist/**',
     ],
+  },
+  {
+    files: ['**/*.{js,mjs,cjs,ts,jsx,tsx,vue}'],
     languageOptions: {
       ecmaVersion: 'latest',
       sourceType: 'module',
@@ -42,7 +56,7 @@ export default [
         'error',
         {
           singleQuote: true,
-          semi: false,
+          semi: true,
           trailingComma: 'es5',
           printWidth: 100,
           tabWidth: 2,
@@ -52,9 +66,17 @@ export default [
           endOfLine: 'lf',
         },
       ],
+      semi: ['error', 'always'],
       'no-unused-vars': 'warn',
       'no-console': process.env.NODE_ENV === 'production' ? 'error' : 'warn',
       'no-debugger': process.env.NODE_ENV === 'production' ? 'error' : 'warn',
+    },
+  },
+  {
+    files: ['apps/backend/scripts/**/*.{js,ts}'],
+    rules: {
+      'no-console': 'off',
+      'no-debugger': 'off',
     },
   },
   ...ts.configs.recommended,
@@ -88,4 +110,4 @@ export default [
       'vue/script-setup-no-uses-vars': 'off',
     },
   },
-]
+];

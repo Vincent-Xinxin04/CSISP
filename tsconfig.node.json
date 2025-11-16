@@ -13,6 +13,6 @@
     "verbatimModuleSyntax": true,
     "moduleDetection": "force"
   },
-  "include": ["**/*.ts", "**/*.js"],
+  "include": ["**/*.ts", "**/*.js", "docs/.vitepress/**/*.ts"],
   "exclude": ["node_modules", "dist", "build", ".dist", ".output", "coverage"]
 }
