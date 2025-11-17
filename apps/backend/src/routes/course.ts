@@ -5,8 +5,8 @@
 
 import Router from '@koa/router';
 import { CourseController } from '../controllers/CourseController';
-import { jwtAuth, requireAdmin, requireTeacher } from '../middleware/auth';
-import { validateRequired, validateIdParam, validatePagination } from '../middleware/validation';
+import { jwtAuth, requireAdmin, requireTeacher } from '../middlewares/auth';
+import { validateRequired, validateIdParam, validatePagination } from '../middlewares/validation';
 
 export function createCourseRoutes(courseController: CourseController): Router {
   const router = new Router({ prefix: '/api/courses' });

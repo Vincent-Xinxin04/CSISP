@@ -1,92 +1,46 @@
-import { Model, DataTypes, Sequelize } from 'sequelize';
+import { Status } from '@csisp/types';
 
-interface ScheduleAttributes {
+// Schedule类型定义
+export interface ScheduleType {
   id: number;
-  class_id: number;
+  classId: number;
   weekday: number;
-  time_slot_id: number;
+  timeSlotId: number;
   room: string;
   location: string;
-  created_at?: Date;
-  updated_at?: Date;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
-class Schedule extends Model<ScheduleAttributes> implements ScheduleAttributes {
-  public id!: number;
-  public class_id!: number;
-  public weekday!: number;
-  public time_slot_id!: number;
-  public room!: string;
-  public location!: string;
-  public readonly created_at!: Date;
-  public readonly updated_at!: Date;
+export class Schedule implements ScheduleType {
+  id: number;
+  classId: number;
+  weekday: number;
+  timeSlotId: number;
+  room: string;
+  location: string;
+  createdAt: Date;
+  updatedAt: Date;
 
-  // 关联方法
-  public static associate(models: Record<string, any>) {
-    // 多对一关系：Schedule - Class
-    Schedule.belongsTo(models.Class, {
-      as: 'class',
-      foreignKey: 'class_id',
-    });
-
-    // 多对一关系：Schedule - TimeSlot
-    Schedule.belongsTo(models.TimeSlot, {
-      as: 'timeSlot',
-      foreignKey: 'time_slot_id',
-    });
+  constructor(
+    id: number,
+    classId: number,
+    weekday: number,
+    timeSlotId: number,
+    room: string,
+    location: string,
+    createdAt: Date = new Date(),
+    updatedAt: Date = new Date()
+  ) {
+    this.id = id;
+    this.classId = classId;
+    this.weekday = weekday;
+    this.timeSlotId = timeSlotId;
+    this.room = room;
+    this.location = location;
+    this.createdAt = createdAt;
+    this.updatedAt = updatedAt;
   }
 }
 
-export default function (sequelize: Sequelize) {
-  Schedule.init(
-    {
-      id: {
-        type: DataTypes.INTEGER,
-        primaryKey: true,
-        autoIncrement: true,
-      },
-      class_id: {
-        type: DataTypes.INTEGER,
-        allowNull: false,
-        references: {
-          model: 'class',
-          key: 'id',
-        },
-      },
-      weekday: {
-        type: DataTypes.INTEGER,
-        allowNull: false,
-        validate: {
-          min: 1,
-          max: 7,
-        },
-      },
-      time_slot_id: {
-        type: DataTypes.INTEGER,
-        allowNull: false,
-        references: {
-          model: 'time_slot',
-          key: 'id',
-        },
-      },
-      room: {
-        type: DataTypes.STRING(100),
-        allowNull: false,
-      },
-      location: {
-        type: DataTypes.STRING(255),
-        allowNull: false,
-      },
-    },
-    {
-      sequelize,
-      modelName: 'Schedule',
-      tableName: 'schedule',
-      createdAt: 'created_at',
-      updatedAt: 'updated_at',
-      timestamps: true,
-    }
-  );
-
-  return Schedule;
-}
+export default Schedule;

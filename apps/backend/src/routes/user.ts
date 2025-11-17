@@ -5,8 +5,8 @@
 
 import Router from '@koa/router';
 import { UserController } from '../controllers/UserController';
-import { jwtAuth, requireAdmin } from '../middleware/auth';
-import { validateRequired, validateIdParam, validatePagination } from '../middleware/validation';
+import { jwtAuth, requireAdmin } from '../middlewares/auth';
+import { validateRequired, validateIdParam, validatePagination } from '../middlewares/validation';
 import { AppContext } from '../types/context';
 
 export function createUserRoutes(userController: UserController): Router {

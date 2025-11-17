@@ -5,8 +5,8 @@
 
 import Router from '@koa/router';
 import { HomeworkController } from '../controllers/HomeworkController';
-import { jwtAuth, requireTeacher, requireStudent } from '../middleware/auth';
-import { validateRequired, validateIdParam, validatePagination } from '../middleware/validation';
+import { jwtAuth, requireTeacher, requireStudent } from '../middlewares/auth';
+import { validateRequired, validateIdParam, validatePagination } from '../middlewares/validation';
 
 export function createHomeworkRoutes(homeworkController: HomeworkController): Router {
   const router = new Router({ prefix: '/api/homework' });

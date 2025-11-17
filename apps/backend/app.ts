@@ -29,7 +29,7 @@ import {
   validateRequired,
   validatePagination,
   validateIdParam,
-} from './src/middleware/index.js';
+} from './src/middlewares/index.js';
 
 // 导入路由
 import {

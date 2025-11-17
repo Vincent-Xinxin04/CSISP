@@ -1,67 +1,31 @@
-import { Model, DataTypes, Sequelize } from 'sequelize';
 import { Status, Permission as PermissionType } from '@csisp/types';
 
-// 使用标准类型定义
-interface PermissionAttributes extends Omit<PermissionType, 'id' | 'createdAt' | 'updatedAt'> {
+export class Permission implements PermissionType {
   id: number;
-  created_at?: Date;
-  updated_at?: Date;
-}
+  name: string;
+  code: string;
+  description: string;
+  status: Status;
+  createdAt: Date;
+  updatedAt: Date;
 
-class Permission extends Model<PermissionAttributes> implements PermissionAttributes {
-  public id!: number;
-  public name!: string;
-  public code!: string;
-  public description!: string;
-  public status!: Status;
-  public readonly created_at!: Date;
-  public readonly updated_at!: Date;
-
-  // 关联方法
-  public static associate(models: Record<string, any>) {
-    Permission.belongsToMany(models.Role, {
-      through: models.RolePermission,
-      foreignKey: 'permission_id',
-    });
+  constructor(
+    id: number,
+    name: string,
+    code: string,
+    description: string,
+    status: Status = Status.ACTIVE,
+    createdAt: Date = new Date(),
+    updatedAt: Date = new Date()
+  ) {
+    this.id = id;
+    this.name = name;
+    this.code = code;
+    this.description = description;
+    this.status = status;
+    this.createdAt = createdAt;
+    this.updatedAt = updatedAt;
   }
 }
 
-export default function (sequelize: Sequelize) {
-  Permission.init(
-    {
-      id: {
-        type: DataTypes.INTEGER,
-        primaryKey: true,
-        autoIncrement: true,
-      },
-      name: {
-        type: DataTypes.STRING(50),
-        allowNull: false,
-        unique: true,
-      },
-      code: {
-        type: DataTypes.STRING(50),
-        allowNull: false,
-        unique: true,
-      },
-      description: {
-        type: DataTypes.STRING(255),
-        allowNull: false,
-      },
-      status: {
-        type: DataTypes.INTEGER,
-        defaultValue: 1,
-      },
-    },
-    {
-      sequelize,
-      modelName: 'Permission',
-      tableName: 'permission',
-      createdAt: 'created_at',
-      updatedAt: 'updated_at',
-      timestamps: true,
-    }
-  );
-
-  return Permission;
-}
+export default Permission;

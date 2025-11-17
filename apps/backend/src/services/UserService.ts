@@ -6,15 +6,17 @@ import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import { CreateUserInput, LoginParams, ApiResponse, Status } from '@csisp/types';
 import { BaseService } from './BaseService';
+import { UserRepository } from '../../repositories/UserRepository';
+import { UserMapper } from '../../mappers/UserMapper';
 
 export class UserService extends BaseService {
-  private userRoleModel: any;
-  private roleModel: any;
+  private userRepository: UserRepository;
+  private userMapper: UserMapper;
 
-  constructor(userModel: any, userRoleModel: any, roleModel: any) {
-    super(userModel);
-    this.userRoleModel = userRoleModel;
-    this.roleModel = roleModel;
+  constructor(userRepository: UserRepository) {
+    super();
+    this.userRepository = userRepository;
+    this.userMapper = new UserMapper();
   }
 
   /**
@@ -25,9 +27,7 @@ export class UserService extends BaseService {
   async register(userData: CreateUserInput): Promise<ApiResponse<any>> {
     try {
       // 检查用户名是否已存在
-      const existingUser = await this.model.findOne({
-        where: { username: userData.username },
-      });
+      const existingUser = await this.userRepository.findByUsername(userData.username);
 
       if (existingUser) {
         return {
@@ -37,9 +37,7 @@ export class UserService extends BaseService {
       }
 
       // 检查学号是否已存在
-      const existingStudent = await this.model.findOne({
-        where: { student_id: userData.studentId }, // 注意字段映射
-      });
+      const existingStudent = await this.userRepository.findByStudentId(userData.studentId);
 
       if (existingStudent) {
         return {
@@ -51,32 +49,24 @@ export class UserService extends BaseService {
       // 密码加密
       const hashedPassword = await bcrypt.hash(userData.password, 12);
 
-      // 创建用户 - 处理字段映射
-      const user = await this.model.create({
+      // 创建用户 - 使用mapper转换数据
+      const user = await this.userRepository.create({
         username: userData.username,
         password: hashedPassword,
-        real_name: userData.realName, // 字段映射
-        student_id: userData.studentId, // 字段映射
-        enrollment_year: userData.enrollmentYear, // 字段映射
+        studentId: userData.studentId,
+        name: userData.realName,
+        enrollmentYear: userData.enrollmentYear,
         major: userData.major,
         status: userData.status || Status.Active,
       });
 
-      // 返回数据需要转换回驼峰命名
+      // 使用mapper转换返回数据
+      const businessUser = this.userMapper.toBusinessModel(user);
+
       return {
         code: 201,
         message: '用户注册成功',
-        data: {
-          id: user.id,
-          username: user.username,
-          realName: user.real_name,
-          studentId: user.student_id,
-          enrollmentYear: user.enrollment_year,
-          major: user.major,
-          status: user.status,
-          createdAt: user.created_at,
-          updatedAt: user.updated_at,
-        },
+        data: businessUser,
       };
     } catch (error) {
       return this.handleError(error, '用户注册失败');
@@ -93,9 +83,7 @@ export class UserService extends BaseService {
       const { username, password } = loginData;
 
       // 查找用户
-      const user = await this.model.findOne({
-        where: { username },
-      });
+      const user = await this.userRepository.findByUsername(username);
 
       if (!user) {
         return {
@@ -121,18 +109,11 @@ export class UserService extends BaseService {
         };
       }
 
-      // 获取用户角色
-      const userRoles = await this.userRoleModel.findAll({
-        where: { user_id: user.id }, // 注意字段映射
-        include: [
-          {
-            model: this.roleModel,
-            attributes: ['name', 'code'],
-          },
-        ],
-      });
+      // 使用mapper转换用户数据
+      const businessUser = this.userMapper.toBusinessModel(user);
 
-      const roles = userRoles.map((ur: any) => ur.Role?.code).filter(Boolean);
+      // 提取角色信息
+      const roles = businessUser.roles.map((role: any) => role.name).filter(Boolean);
 
       // 生成JWT令牌
       const token = jwt.sign(
@@ -150,17 +131,7 @@ export class UserService extends BaseService {
         message: '登录成功',
         data: {
           token,
-          user: {
-            id: user.id,
-            username: user.username,
-            realName: user.real_name,
-            studentId: user.student_id,
-            enrollmentYear: user.enrollment_year,
-            major: user.major,
-            status: user.status,
-            createdAt: user.created_at,
-            updatedAt: user.updated_at,
-          },
+          user: businessUser,
           roles: roles as string[],
         },
       };
@@ -251,9 +222,7 @@ export class UserService extends BaseService {
    */
   async findByStudentId(studentId: string): Promise<ApiResponse<any | null>> {
     try {
-      const user = await this.model.findOne({
-        where: { student_id: studentId }, // 注意字段映射
-      });
+      const user = await this.userRepository.findByStudentId(studentId);
 
       if (!user) {
         return {
@@ -262,20 +231,13 @@ export class UserService extends BaseService {
         };
       }
 
+      // 使用mapper转换返回数据
+      const businessUser = this.userMapper.toBusinessModel(user);
+
       return {
         code: 200,
         message: '查询成功',
-        data: {
-          id: user.id,
-          username: user.username,
-          realName: user.real_name,
-          studentId: user.student_id,
-          enrollmentYear: user.enrollment_year,
-          major: user.major,
-          status: user.status,
-          createdAt: user.created_at,
-          updatedAt: user.updated_at,
-        },
+        data: businessUser,
       };
     } catch (error) {
       return this.handleError(error, '查询失败');
@@ -294,28 +256,18 @@ export class UserService extends BaseService {
         usersData.map(async userData => ({
           username: userData.username,
           password: await bcrypt.hash(userData.password, 12),
-          real_name: userData.realName, // 字段映射
-          student_id: userData.studentId, // 字段映射
-          enrollment_year: userData.enrollmentYear, // 字段映射
+          studentId: userData.studentId,
+          name: userData.realName,
+          enrollmentYear: userData.enrollmentYear,
           major: userData.major,
           status: userData.status || Status.Active,
         }))
       );
 
-      const users = await this.model.bulkCreate(processedUsers);
+      const users = await this.userRepository.bulkCreate(processedUsers);
 
-      // 转换返回数据格式
-      const result = users.map(user => ({
-        id: user.id,
-        username: user.username,
-        realName: user.real_name,
-        studentId: user.student_id,
-        enrollmentYear: user.enrollment_year,
-        major: user.major,
-        status: user.status,
-        createdAt: user.created_at,
-        updatedAt: user.updated_at,
-      }));
+      // 使用mapper转换返回数据格式
+      const result = users.map(user => this.userMapper.toBusinessModel(user));
 
       return {
         code: 201,

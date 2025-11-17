@@ -5,7 +5,8 @@
     "database": "csisp",
     "host": "localhost",
     "port": 5433,
-    "dialect": "postgres"
+    "dialect": "postgres",
+    "timezone": "+08:00"
   },
   "test": {
     "username": "admin",
@@ -13,7 +14,9 @@
     "database": "csisp_test",
     "host": "localhost",
     "port": 5433,
-    "dialect": "postgres"
+    "dialect": "postgres",
+    "timezone": "+08:00",
+    "logging": false
   },
   "production": {
     "username": "admin",
@@ -21,6 +24,8 @@
     "database": "csisp_production",
     "host": "localhost",
     "port": 5433,
-    "dialect": "postgres"
+    "dialect": "postgres",
+    "timezone": "+08:00",
+    "logging": false
   }
 }

@@ -1,5 +1,12 @@
 {
   "extends": "../../tsconfig.json",
-  "include": ["src/**/*.ts", "src/**/*.d.ts", "app.ts"],
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.d.ts",
+    "app.ts",
+    "sequelize/migrations/**/*.ts",
+    "sequelize/models/**/*.ts",
+    "sequelize/seeders/**/*.ts"
+  ],
   "exclude": ["node_modules", "dist"]
 }

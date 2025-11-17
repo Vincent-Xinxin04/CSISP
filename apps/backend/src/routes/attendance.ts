@@ -5,8 +5,8 @@
 
 import Router from '@koa/router';
 import { AttendanceController } from '../controllers/AttendanceController';
-import { jwtAuth, requireTeacher, requireStudent } from '../middleware/auth';
-import { validateRequired, validateIdParam, validatePagination } from '../middleware/validation';
+import { jwtAuth, requireTeacher, requireStudent } from '../middlewares/auth';
+import { validateRequired, validateIdParam, validatePagination } from '../middlewares/validation';
 
 export function createAttendanceRoutes(attendanceController: AttendanceController): Router {
   const router = new Router({ prefix: '/api/attendance' });
