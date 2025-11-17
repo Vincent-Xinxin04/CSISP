@@ -1,0 +1,292 @@
+/**
+ * 课程控制器
+ * 处理课程相关的HTTP请求，包括课程管理、班级管理、时间安排等
+ */
+import { CourseService } from '../services/CourseService';
+import { BaseController } from './BaseController';
+import {
+  CreateCourseInput,
+  CreateClassInput,
+  CreateTimeSlotInput,
+  CreateSubCourseInput,
+  Status,
+} from '@csisp/types';
+import { AppContext } from '../types/context';
+
+export class CourseController extends BaseController {
+  private courseService: CourseService;
+
+  constructor(courseService: CourseService) {
+    super();
+    this.courseService = courseService;
+  }
+
+  /**
+   * 创建课程
+   * POST /api/courses
+   * @param ctx Koa上下文
+   */
+  async createCourse(ctx: AppContext): Promise<void> {
+    try {
+      const courseData: CreateCourseInput = ctx.request.body as CreateCourseInput;
+
+      // 验证必填参数
+      const requiredParams = [
+        'courseName',
+        'courseCode',
+        'semester',
+        'academicYear',
+        'availableMajors',
+      ];
+      if (!this.validateRequiredParams(ctx, requiredParams, courseData)) {
+        return;
+      }
+
+      const result = await this.courseService.createCourse(courseData);
+      this.handleServiceResponse(ctx, result);
+    } catch (error) {
+      console.error('创建课程错误:', error);
+      this.serverError(ctx, '创建课程失败');
+    }
+  }
+
+  /**
+   * 为课程分配教师
+   * POST /api/courses/:id/teachers
+   * @param ctx Koa上下文
+   */
+  async assignTeachers(ctx: AppContext): Promise<void> {
+    try {
+      const courseId = parseInt(ctx.params.id);
+      if (isNaN(courseId)) {
+        this.error(ctx, '课程ID必须是数字', 400);
+        return;
+      }
+
+      const { teacherIds } = ctx.request.body as { teacherIds: number[] };
+
+      if (!Array.isArray(teacherIds)) {
+        this.error(ctx, '教师ID必须是数组', 400);
+        return;
+      }
+
+      if (teacherIds.length === 0) {
+        this.error(ctx, '至少需要分配一个教师', 400);
+        return;
+      }
+
+      if (teacherIds.length > 10) {
+        this.error(ctx, '最多分配10个教师', 400);
+        return;
+      }
+
+      const result = await this.courseService.assignTeachers(courseId, teacherIds);
+      this.handleServiceResponse(ctx, result);
+    } catch (error) {
+      console.error('分配教师错误:', error);
+      this.serverError(ctx, '分配教师失败');
+    }
+  }
+
+  /**
+   * 创建班级
+   * POST /api/courses/classes
+   * @param ctx Koa上下文
+   */
+  async createClass(ctx: AppContext): Promise<void> {
+    try {
+      const classData: CreateClassInput = ctx.request.body as CreateClassInput;
+
+      // 验证必填参数
+      const requiredParams = [
+        'className',
+        'courseId',
+        'teacherId',
+        'semester',
+        'academicYear',
+        'maxStudents',
+      ];
+      if (!this.validateRequiredParams(ctx, requiredParams, classData)) {
+        return;
+      }
+
+      const result = await this.courseService.createClass(classData);
+      this.handleServiceResponse(ctx, result);
+    } catch (error) {
+      console.error('创建班级错误:', error);
+      this.serverError(ctx, '创建班级失败');
+    }
+  }
+
+  /**
+   * 创建时间段
+   * POST /api/courses/time-slots
+   * @param ctx Koa上下文
+   */
+  async createTimeSlot(ctx: AppContext): Promise<void> {
+    try {
+      const timeSlotData: CreateTimeSlotInput = ctx.request.body as CreateTimeSlotInput;
+
+      // 验证必填参数
+      const requiredParams = ['subCourseId', 'weekday', 'startTime', 'endTime', 'location'];
+      if (!this.validateRequiredParams(ctx, requiredParams, timeSlotData)) {
+        return;
+      }
+
+      const result = await this.courseService.createTimeSlot(timeSlotData);
+      this.handleServiceResponse(ctx, result);
+    } catch (error) {
+      console.error('创建时间段错误:', error);
+      this.serverError(ctx, '创建时间段失败');
+    }
+  }
+
+  /**
+   * 创建子课程
+   * POST /api/courses/sub-courses
+   * @param ctx Koa上下文
+   */
+  async createSubCourse(ctx: AppContext): Promise<void> {
+    try {
+      const subCourseData: CreateSubCourseInput = ctx.request.body as CreateSubCourseInput;
+
+      // 验证必填参数
+      const requiredParams = ['courseId', 'subCourseCode', 'teacherId', 'academicYear'];
+      if (!this.validateRequiredParams(ctx, requiredParams, subCourseData)) {
+        return;
+      }
+
+      const result = await this.courseService.createSubCourse(subCourseData);
+      this.handleServiceResponse(ctx, result);
+    } catch (error) {
+      console.error('创建子课程错误:', error);
+      this.serverError(ctx, '创建子课程失败');
+    }
+  }
+
+  /**
+   * 获取课程列表（支持专业筛选）
+   * GET /api/courses?major=计算机科学&semester=1&page=1&size=10
+   * @param ctx Koa上下文
+   */
+  async getCourses(ctx: AppContext): Promise<void> {
+    try {
+      // 验证分页参数
+      const pagination = this.validatePagination(ctx, ctx.query);
+
+      const { major, semester } = ctx.query;
+
+      const result = await this.courseService.getCoursesByMajor(
+        pagination,
+        major as string,
+        semester ? parseInt(semester as string) : undefined
+      );
+
+      this.handleServiceResponse(ctx, result);
+    } catch (error) {
+      console.error('获取课程列表错误:', error);
+      this.serverError(ctx, '获取课程列表失败');
+    }
+  }
+
+  /**
+   * 获取课程详细信息
+   * GET /api/courses/:id
+   * @param ctx Koa上下文
+   */
+  async getCourseDetail(ctx: AppContext): Promise<void> {
+    try {
+      const courseId = parseInt(ctx.params.id);
+      if (isNaN(courseId)) {
+        this.error(ctx, '课程ID必须是数字', 400);
+        return;
+      }
+
+      const result = await this.courseService.getCourseDetail(courseId);
+      this.handleServiceResponse(ctx, result);
+    } catch (error) {
+      console.error('获取课程详情错误:', error);
+      this.serverError(ctx, '获取课程详情失败');
+    }
+  }
+
+  /**
+   * 获取指定学期的课程
+   * GET /api/courses/semester/:year/:semester
+   * @param ctx Koa上下文
+   */
+  async getCoursesBySemester(ctx: AppContext): Promise<void> {
+    try {
+      const academicYear = parseInt(ctx.params.year);
+      const semester = parseInt(ctx.params.semester);
+
+      if (isNaN(academicYear) || isNaN(semester)) {
+        this.error(ctx, '学年和学期必须是数字', 400);
+        return;
+      }
+
+      if (semester < 1 || semester > 8) {
+        this.error(ctx, '学期必须在1-8之间', 400);
+        return;
+      }
+
+      const result = await this.courseService.getCoursesBySemester(academicYear, semester);
+      this.handleServiceResponse(ctx, result);
+    } catch (error) {
+      console.error('获取学期课程错误:', error);
+      this.serverError(ctx, '获取学期课程失败');
+    }
+  }
+
+  /**
+   * 获取教师授课列表
+   * GET /api/courses/teacher/:teacherId?page=1&size=10
+   * @param ctx Koa上下文
+   */
+  async getTeacherCourses(ctx: AppContext): Promise<void> {
+    try {
+      const teacherId = parseInt(ctx.params.teacherId);
+      if (isNaN(teacherId)) {
+        this.error(ctx, '教师ID必须是数字', 400);
+        return;
+      }
+
+      // 验证分页参数
+      const pagination = this.validatePagination(ctx, ctx.query);
+
+      const result = await this.courseService.getTeacherCourses(teacherId, pagination);
+      this.handleServiceResponse(ctx, result);
+    } catch (error) {
+      console.error('获取教师课程错误:', error);
+      this.serverError(ctx, '获取教师课程失败');
+    }
+  }
+
+  /**
+   * 更新课程状态
+   * PUT /api/courses/:id/status
+   * @param ctx Koa上下文
+   */
+  async updateCourseStatus(ctx: AppContext): Promise<void> {
+    try {
+      const courseId = parseInt(ctx.params.id);
+      if (isNaN(courseId)) {
+        this.error(ctx, '课程ID必须是数字', 400);
+        return;
+      }
+
+      const { status } = ctx.request.body as { status: Status };
+
+      if (status !== Status.Active && status !== Status.Inactive) {
+        this.error(ctx, '状态必须是0(禁用)或1(启用)', 400);
+        return;
+      }
+
+      const result = await this.courseService.updateCourseStatus(courseId, status);
+      this.handleServiceResponse(ctx, result);
+    } catch (error) {
+      console.error('更新课程状态错误:', error);
+      this.serverError(ctx, '更新课程状态失败');
+    }
+  }
+}

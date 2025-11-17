@@ -1,9 +1,16 @@
 import { Model, DataTypes, Sequelize } from 'sequelize';
-import { Status, User as UserType } from '@csisp/types';
+import { Status } from '@csisp/types';
 
 // 使用标准类型定义
-interface UserAttributes extends Omit<UserType, 'id' | 'createdAt' | 'updatedAt'> {
+interface UserAttributes {
   id: number;
+  username: string;
+  password: string;
+  studentId: string;
+  enrollmentYear: number;
+  major: string;
+  realName: string;
+  status: Status;
   created_at?: Date;
   updated_at?: Date;
 }

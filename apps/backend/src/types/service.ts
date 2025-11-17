@@ -8,7 +8,6 @@ import {
   Permission,
   Course,
   Teacher,
-  Class,
   AttendanceTask,
   AttendanceRecord,
   Homework,

@@ -1,9 +1,16 @@
 import { Model, DataTypes, Sequelize } from 'sequelize';
-import { Status, Semester, Class as ClassType } from '@csisp/types';
+import { Status, Semester } from '@csisp/types';
 
 // 使用标准类型定义
-interface ClassAttributes extends Omit<ClassType, 'id' | 'createdAt' | 'updatedAt'> {
+interface ClassAttributes {
   id: number;
+  className: string;
+  courseId: number;
+  teacherId: number;
+  semester: Semester;
+  academicYear: number;
+  maxStudents: number;
+  status: Status;
   created_at?: Date;
   updated_at?: Date;
 }

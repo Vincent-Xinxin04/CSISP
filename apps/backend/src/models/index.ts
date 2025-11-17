@@ -1,6 +1,12 @@
 import { Sequelize } from 'sequelize';
 import fs from 'fs';
 import path from 'path';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+
+// 获取当前文件路径（ESM模式）
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 // 获取当前环境配置
 const env = process.env.NODE_ENV || 'development';

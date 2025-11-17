@@ -1,5 +1,5 @@
 // 数据库模型相关类型定义
-import { Model, ModelStatic, Sequelize, DataTypes, Optional } from 'sequelize';
+import { Model, Optional, ModelStatic, Sequelize } from 'sequelize';
 import { Status, UserRoleType, AttendanceStatus, WeekDay } from '@csisp/types';
 
 // 作业状态类型
