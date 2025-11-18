@@ -14,7 +14,7 @@ export class Permission implements PermissionType {
     name: string,
     code: string,
     description: string,
-    status: Status = Status.ACTIVE,
+    status: Status = Status.Active,
     createdAt: Date = new Date(),
     updatedAt: Date = new Date()
   ) {

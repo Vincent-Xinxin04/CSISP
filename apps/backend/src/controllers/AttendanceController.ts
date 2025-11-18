@@ -32,8 +32,7 @@ export class AttendanceController extends BaseController {
 
       const result = await this.attendanceService.createAttendanceTask(taskData);
       this.handleServiceResponse(ctx, result);
-    } catch (error) {
-      console.error('创建考勤任务错误:', error);
+    } catch {
       this.serverError(ctx, '创建考勤任务失败');
     }
   }
@@ -58,7 +57,7 @@ export class AttendanceController extends BaseController {
       }
 
       // 获取当前用户ID
-      const userId = ctx.state.user?.userId;
+      const userId = ctx.userId || ctx.state.userId;
       if (!userId) {
         this.unauthorized(ctx, '未登录或登录已过期');
         return;
@@ -66,8 +65,7 @@ export class AttendanceController extends BaseController {
 
       const result = await this.attendanceService.checkIn(taskId, userId, status, remark);
       this.handleServiceResponse(ctx, result);
-    } catch (error) {
-      console.error('学生打卡错误:', error);
+    } catch {
       this.serverError(ctx, '打卡失败');
     }
   }
@@ -90,8 +88,7 @@ export class AttendanceController extends BaseController {
 
       const result = await this.attendanceService.getClassAttendanceTasks(classId, pagination);
       this.handleServiceResponse(ctx, result);
-    } catch (error) {
-      console.error('获取班级考勤任务错误:', error);
+    } catch {
       this.serverError(ctx, '获取班级考勤任务失败');
     }
   }
@@ -114,8 +111,7 @@ export class AttendanceController extends BaseController {
 
       const result = await this.attendanceService.getAttendanceRecords(taskId, pagination);
       this.handleServiceResponse(ctx, result);
-    } catch (error) {
-      console.error('获取打卡记录错误:', error);
+    } catch {
       this.serverError(ctx, '获取打卡记录失败');
     }
   }
@@ -141,8 +137,7 @@ export class AttendanceController extends BaseController {
 
       const result = await this.attendanceService.getStudentAttendanceStats(userId, classId);
       this.handleServiceResponse(ctx, result);
-    } catch (error) {
-      console.error('获取学生考勤统计错误:', error);
+    } catch {
       this.serverError(ctx, '获取学生考勤统计失败');
     }
   }
@@ -162,8 +157,7 @@ export class AttendanceController extends BaseController {
 
       const result = await this.attendanceService.getClassAttendanceStats(classId);
       this.handleServiceResponse(ctx, result);
-    } catch (error) {
-      console.error('获取班级考勤统计错误:', error);
+    } catch {
       this.serverError(ctx, '获取班级考勤统计失败');
     }
   }
@@ -197,8 +191,7 @@ export class AttendanceController extends BaseController {
 
       const result = await this.attendanceService.updateAttendanceRecord(recordId, updateData);
       this.handleServiceResponse(ctx, result);
-    } catch (error) {
-      console.error('更新考勤记录错误:', error);
+    } catch {
       this.serverError(ctx, '更新考勤记录失败');
     }
   }
@@ -218,9 +211,36 @@ export class AttendanceController extends BaseController {
 
       const result = await this.attendanceService.getActiveAttendanceTasks(classId);
       this.handleServiceResponse(ctx, result);
-    } catch (error) {
-      console.error('获取活跃考勤任务错误:', error);
+    } catch {
       this.serverError(ctx, '获取活跃考勤任务失败');
     }
+  }
+
+  /**
+   * 获取活跃考勤任务（别名）
+   */
+  async getActiveTasks(ctx: AppContext): Promise<void> {
+    await this.getActiveAttendanceTasks(ctx);
+  }
+
+  /**
+   * 获取学生打卡记录（占位实现）
+   */
+  async getStudentAttendanceRecords(ctx: AppContext): Promise<void> {
+    this.error(ctx, '暂不支持该查询', 400);
+  }
+
+  /**
+   * 批量更新考勤记录（占位实现）
+   */
+  async batchUpdateAttendanceRecords(ctx: AppContext): Promise<void> {
+    this.error(ctx, '暂不支持批量更新', 400);
+  }
+
+  /**
+   * 导出考勤数据（占位实现）
+   */
+  async exportAttendanceData(ctx: AppContext): Promise<void> {
+    this.error(ctx, '暂不支持数据导出', 400);
   }
 }

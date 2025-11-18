@@ -32,8 +32,7 @@ export class HomeworkController extends BaseController {
 
       const result = await this.homeworkService.createHomework(homeworkData);
       this.handleServiceResponse(ctx, result);
-    } catch (error) {
-      console.error('发布作业错误:', error);
+    } catch {
       this.serverError(ctx, '发布作业失败');
     }
   }
@@ -71,8 +70,7 @@ export class HomeworkController extends BaseController {
 
       const result = await this.homeworkService.submitHomework(submissionData, fileInfo);
       this.handleServiceResponse(ctx, result);
-    } catch (error) {
-      console.error('提交作业错误:', error);
+    } catch {
       this.serverError(ctx, '提交作业失败');
     }
   }
@@ -95,8 +93,7 @@ export class HomeworkController extends BaseController {
 
       const result = await this.homeworkService.getClassHomeworks(classId, pagination);
       this.handleServiceResponse(ctx, result);
-    } catch (error) {
-      console.error('获取班级作业列表错误:', error);
+    } catch {
       this.serverError(ctx, '获取班级作业列表失败');
     }
   }
@@ -122,8 +119,7 @@ export class HomeworkController extends BaseController {
 
       const result = await this.homeworkService.getStudentSubmissions(userId, classId);
       this.handleServiceResponse(ctx, result);
-    } catch (error) {
-      console.error('获取学生作业提交情况错误:', error);
+    } catch {
       this.serverError(ctx, '获取学生作业提交情况失败');
     }
   }
@@ -154,8 +150,7 @@ export class HomeworkController extends BaseController {
 
       const result = await this.homeworkService.gradeHomework(submissionId, score, comment);
       this.handleServiceResponse(ctx, result);
-    } catch (error) {
-      console.error('批改作业错误:', error);
+    } catch {
       this.serverError(ctx, '批改作业失败');
     }
   }
@@ -178,8 +173,7 @@ export class HomeworkController extends BaseController {
 
       const result = await this.homeworkService.getHomeworkSubmissions(homeworkId, pagination);
       this.handleServiceResponse(ctx, result);
-    } catch (error) {
-      console.error('获取作业提交情况错误:', error);
+    } catch {
       this.serverError(ctx, '获取作业提交情况失败');
     }
   }
@@ -199,8 +193,7 @@ export class HomeworkController extends BaseController {
 
       const result = await this.homeworkService.getHomeworkStats(homeworkId);
       this.handleServiceResponse(ctx, result);
-    } catch (error) {
-      console.error('获取作业统计信息错误:', error);
+    } catch {
       this.serverError(ctx, '获取作业统计信息失败');
     }
   }
@@ -227,9 +220,97 @@ export class HomeworkController extends BaseController {
 
       const result = await this.homeworkService.updateHomeworkStatus(homeworkId, status);
       this.handleServiceResponse(ctx, result);
-    } catch (error) {
-      console.error('更新作业状态错误:', error);
+    } catch {
       this.serverError(ctx, '更新作业状态失败');
+    }
+  }
+
+  /**
+   * 更新作业信息
+   * PUT /api/homework/:homeworkId
+   */
+  async updateHomework(ctx: AppContext): Promise<void> {
+    try {
+      const homeworkId = parseInt(ctx.params.homeworkId);
+      if (isNaN(homeworkId)) {
+        this.error(ctx, '作业ID必须是数字', 400);
+        return;
+      }
+
+      const updateData = ctx.request.body as Partial<CreateHomeworkInput>;
+      const result = await this.homeworkService.update(homeworkId, updateData);
+      this.handleServiceResponse(ctx, result);
+    } catch {
+      this.serverError(ctx, '更新作业失败');
+    }
+  }
+
+  /**
+   * 删除作业
+   * DELETE /api/homework/:homeworkId
+   */
+  async deleteHomework(ctx: AppContext): Promise<void> {
+    try {
+      const homeworkId = parseInt(ctx.params.homeworkId);
+      if (isNaN(homeworkId)) {
+        this.error(ctx, '作业ID必须是数字', 400);
+        return;
+      }
+
+      const result = await this.homeworkService.delete(homeworkId);
+      this.handleServiceResponse(ctx, result);
+    } catch {
+      this.serverError(ctx, '删除作业失败');
+    }
+  }
+
+  /**
+   * 获取作业详情
+   * GET /api/homework/:homeworkId
+   */
+  async getHomeworkDetail(ctx: AppContext): Promise<void> {
+    try {
+      const homeworkId = parseInt(ctx.params.homeworkId);
+      if (isNaN(homeworkId)) {
+        this.error(ctx, '作业ID必须是数字', 400);
+        return;
+      }
+
+      const result = await this.homeworkService.findById(homeworkId);
+      this.handleServiceResponse(ctx, result);
+    } catch {
+      this.serverError(ctx, '获取作业详情失败');
+    }
+  }
+
+  /**
+   * 获取学生的作业详情
+   * GET /api/homework/:homeworkId/student/:userId
+   */
+  async getStudentHomeworkDetail(ctx: AppContext): Promise<void> {
+    try {
+      const homeworkId = parseInt(ctx.params.homeworkId);
+      const userId = parseInt(ctx.params.userId);
+      if (isNaN(homeworkId) || isNaN(userId)) {
+        this.error(ctx, '作业ID和用户ID必须是数字', 400);
+        return;
+      }
+
+      // 复用提交列表并筛选指定用户
+      const pagination = { page: 1, size: 100 };
+      const list = await this.homeworkService.getHomeworkSubmissions(homeworkId, pagination);
+      if (list.code !== 200 || !list.data) {
+        this.handleServiceResponse(ctx, list);
+        return;
+      }
+      const submission = (list.data as any).data.find((s: any) => s.user_id === userId);
+      if (!submission) {
+        this.error(ctx, '未找到该学生的提交', 404);
+        return;
+      }
+      this.success(ctx, submission, '获取学生作业详情成功');
+    } catch {
+      this.serverError(ctx, '获取学生作业详情失败');
     }
   }
 }

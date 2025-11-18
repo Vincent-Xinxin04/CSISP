@@ -192,7 +192,7 @@ export class HomeworkService extends BaseService {
         status: Status.Active,
       });
     } catch (error) {
-      return this.handleError(error, '获取班级作业失败') as ApiResponse<PaginationResponse<any>>;
+      return this.handleError<PaginationResponse<any>>(error, '获取班级作业失败');
     }
   }
 
@@ -212,7 +212,7 @@ export class HomeworkService extends BaseService {
           where: { class_id: classId }, // 注意字段映射
           attributes: ['id'],
         });
-        const homeworkIds = classHomeworks.map(hw => hw.id);
+        const homeworkIds = classHomeworks.map((hw: any) => hw.id);
 
         if (homeworkIds.length === 0) {
           return {
@@ -246,7 +246,7 @@ export class HomeworkService extends BaseService {
         data: submissions,
       };
     } catch (error) {
-      return this.handleError(error, '获取学生作业提交失败') as ApiResponse<any[]>;
+      return this.handleError<any[]>(error, '获取学生作业提交失败');
     }
   }
 
@@ -355,9 +355,7 @@ export class HomeworkService extends BaseService {
         },
       };
     } catch (error) {
-      return this.handleError(error, '获取作业提交情况失败') as ApiResponse<
-        PaginationResponse<any>
-      >;
+      return this.handleError<PaginationResponse<any>>(error, '获取作业提交情况失败');
     }
   }
 
@@ -396,13 +394,15 @@ export class HomeworkService extends BaseService {
       });
 
       const submittedCount = submissions.length;
-      const gradedCount = submissions.filter(s => s.status === 'graded').length;
+      const gradedCount = submissions.filter((s: any) => s.status === 'graded').length;
       const overdueCount = submissions.filter(
-        s => new Date(s.submit_time) > new Date(homework.deadline) // 注意字段映射
+        (s: any) => new Date(s.submit_time) > new Date(homework.deadline) // 注意字段映射
       ).length;
 
       const averageScore =
-        gradedCount > 0 ? submissions.reduce((sum, s) => sum + (s.score || 0), 0) / gradedCount : 0;
+        gradedCount > 0
+          ? submissions.reduce((sum: number, s: any) => sum + (s.score || 0), 0) / gradedCount
+          : 0;
 
       return {
         code: 200,

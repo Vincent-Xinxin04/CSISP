@@ -3,7 +3,7 @@
  * 负责初始化所有服务、控制器和路由配置
  */
 
-import models from './models';
+import models, { modelsReady } from '../sequelize/models';
 import { ServiceFactory } from './services/ServiceFactory';
 import { RouterConfig } from './controllers/RouterConfig';
 import {
@@ -18,10 +18,11 @@ import {
  * 创建所有服务实例、控制器实例，并配置路由
  * @returns 路由配置实例
  */
-export function initializeControllers(): RouterConfig {
+export async function initializeControllers(): Promise<RouterConfig> {
   // 获取服务工厂实例
   const serviceFactory = ServiceFactory.getInstance();
 
+  await modelsReady;
   // 注册所有模型
   serviceFactory.registerModels(models);
 
@@ -49,8 +50,8 @@ export function initializeControllers(): RouterConfig {
  * 获取路由信息（用于调试和文档生成）
  * @returns 路由信息数组
  */
-export function getRoutesInfo() {
-  const routerConfig = initializeControllers();
+export async function getRoutesInfo() {
+  const routerConfig = await initializeControllers();
   return routerConfig.getRoutesInfo();
 }
 

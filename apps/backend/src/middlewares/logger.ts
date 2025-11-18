@@ -46,7 +46,7 @@ export const logger = (options: LoggerMiddlewareOptions = {}): Middleware => {
     const headers = sanitizeData(ctx.headers, sensitiveFields);
     requestLog.headers = headers;
 
-    console.log('请求开始:', JSON.stringify(requestLog));
+    process.stdout.write(`request_start:${JSON.stringify(requestLog)}\n`);
 
     try {
       await next();
@@ -67,7 +67,7 @@ export const logger = (options: LoggerMiddlewareOptions = {}): Middleware => {
         responseLog.body = sanitizeData(ctx.body, sensitiveFields);
       }
 
-      console.log('请求完成:', JSON.stringify(responseLog));
+      process.stdout.write(`request_done:${JSON.stringify(responseLog)}\n`);
     } catch (error: any) {
       const duration = Date.now() - start;
 
@@ -81,7 +81,7 @@ export const logger = (options: LoggerMiddlewareOptions = {}): Middleware => {
         error: error.message,
       };
 
-      console.error('请求错误:', JSON.stringify(errorLog));
+      process.stderr.write(`request_error:${JSON.stringify(errorLog)}\n`);
 
       // 重新抛出错误让错误处理中间件处理
       throw error;
@@ -144,10 +144,10 @@ export const accessLogger: Middleware = async (ctx: AppContext, next: Next) => {
 
   // 根据状态码选择日志级别
   if (ctx.status >= 500) {
-    console.error('服务器错误:', JSON.stringify(logData));
+    process.stderr.write(`server_error:${JSON.stringify(logData)}\n`);
   } else if (ctx.status >= 400) {
-    console.warn('客户端错误:', JSON.stringify(logData));
+    process.stdout.write(`client_error:${JSON.stringify(logData)}\n`);
   } else {
-    console.log('访问日志:', JSON.stringify(logData));
+    process.stdout.write(`access:${JSON.stringify(logData)}\n`);
   }
 };

@@ -213,9 +213,7 @@ export class AttendanceService extends BaseService {
         status: Status.Active,
       });
     } catch (error) {
-      return this.handleError(error, '获取班级考勤任务失败') as ApiResponse<
-        PaginationResponse<any>
-      >;
+      return this.handleError<PaginationResponse<any>>(error, '获取班级考勤任务失败');
     }
   }
 
@@ -269,7 +267,7 @@ export class AttendanceService extends BaseService {
         },
       };
     } catch (error) {
-      return this.handleError(error, '获取打卡记录失败') as ApiResponse<PaginationResponse<any>>;
+      return this.handleError<PaginationResponse<any>>(error, '获取打卡记录失败');
     }
   }
 
@@ -289,7 +287,7 @@ export class AttendanceService extends BaseService {
           where: { class_id: classId }, // 注意字段映射
           attributes: ['id'],
         });
-        const taskIds = classTasks.map(task => task.id);
+        const taskIds = classTasks.map((task: any) => task.id);
 
         if (taskIds.length === 0) {
           return {
@@ -322,10 +320,10 @@ export class AttendanceService extends BaseService {
       });
 
       const totalCount = records.length;
-      const normalCount = records.filter(r => r.status === AttendanceStatus.Normal).length;
-      const lateCount = records.filter(r => r.status === AttendanceStatus.Late).length;
-      const absentCount = records.filter(r => r.status === AttendanceStatus.Absent).length;
-      const leaveCount = records.filter(r => r.status === AttendanceStatus.Leave).length;
+      const normalCount = records.filter((r: any) => r.status === AttendanceStatus.Normal).length;
+      const lateCount = records.filter((r: any) => r.status === AttendanceStatus.Late).length;
+      const absentCount = records.filter((r: any) => r.status === AttendanceStatus.Absent).length;
+      const leaveCount = records.filter((r: any) => r.status === AttendanceStatus.Leave).length;
       const rate = totalCount > 0 ? (normalCount / totalCount) * 100 : 0;
 
       return {
@@ -368,7 +366,7 @@ export class AttendanceService extends BaseService {
         where: { class_id: classId }, // 注意字段映射
       });
 
-      const taskIds = tasks.map(task => task.id);
+      const taskIds = tasks.map((task: any) => task.id);
 
       if (taskIds.length === 0) {
         return {
@@ -390,10 +388,10 @@ export class AttendanceService extends BaseService {
       });
 
       const totalCount = records.length;
-      const normalCount = records.filter(r => r.status === AttendanceStatus.Normal).length;
-      const lateCount = records.filter(r => r.status === AttendanceStatus.Late).length;
-      const absentCount = records.filter(r => r.status === AttendanceStatus.Absent).length;
-      const leaveCount = records.filter(r => r.status === AttendanceStatus.Leave).length;
+      const normalCount = records.filter((r: any) => r.status === AttendanceStatus.Normal).length;
+      const lateCount = records.filter((r: any) => r.status === AttendanceStatus.Late).length;
+      const absentCount = records.filter((r: any) => r.status === AttendanceStatus.Absent).length;
+      const leaveCount = records.filter((r: any) => r.status === AttendanceStatus.Leave).length;
       const rate = totalCount > 0 ? (normalCount / totalCount) * 100 : 0;
 
       return {
@@ -478,7 +476,7 @@ export class AttendanceService extends BaseService {
         data: tasks,
       };
     } catch (error) {
-      return this.handleError(error, '获取活跃考勤任务失败') as ApiResponse<any[]>;
+      return this.handleError<any[]>(error, '获取活跃考勤任务失败');
     }
   }
 }

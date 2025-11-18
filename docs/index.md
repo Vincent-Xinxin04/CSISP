@@ -23,10 +23,10 @@ features:
     details: 后端系统的详细设计，包括API、数据模型等
     link: /src/backend/后端设计文档
   - title: 数据库设计
-    details: 数据库表结构、关系和索引设计
+    details: 数据库表结构、关系和索引设计（含子课程、时间段、课程-教师、作业附件）
     link: /src/database/数据库设计文档
   - title: 数据模型类型
-    details: TypeScript数据模型类型说明和使用规范
+    details: TypeScript数据模型类型说明和使用规范（对齐 Course/TimeSlot/Attendance 等字段）
     link: /src/database/数据模型类型说明文档
   - title: 技术架构
     details: 项目使用的技术栈和架构模式说明

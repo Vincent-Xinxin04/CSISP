@@ -1,12 +1,16 @@
 {
   "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "moduleResolution": "node",
+    "types": ["node"],
+    "esModuleInterop": true
+  },
   "include": [
     "src/**/*.ts",
     "src/**/*.d.ts",
-    "app.ts",
     "sequelize/migrations/**/*.ts",
-    "sequelize/models/**/*.ts",
-    "sequelize/seeders/**/*.ts"
+    "sequelize/seeders/**/*.ts",
+    "app.ts"
   ],
   "exclude": ["node_modules", "dist"]
 }

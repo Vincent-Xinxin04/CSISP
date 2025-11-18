@@ -18,7 +18,7 @@ export class TimeSlot implements TimeSlotType {
     startTime: string,
     endTime: string,
     location: string,
-    status: Status = Status.ACTIVE,
+    status: Status = Status.Active,
     createdAt: Date = new Date(),
     updatedAt: Date = new Date()
   ) {

@@ -93,7 +93,7 @@ export interface AttendanceDetail {
  * 学生打卡参数
  */
 export interface CheckinParams {
-  courseId: number;
+  classId: number;
 }
 
 /**

@@ -44,8 +44,7 @@ export class CourseController extends BaseController {
 
       const result = await this.courseService.createCourse(courseData);
       this.handleServiceResponse(ctx, result);
-    } catch (error) {
-      console.error('创建课程错误:', error);
+    } catch {
       this.serverError(ctx, '创建课程失败');
     }
   }
@@ -82,8 +81,7 @@ export class CourseController extends BaseController {
 
       const result = await this.courseService.assignTeachers(courseId, teacherIds);
       this.handleServiceResponse(ctx, result);
-    } catch (error) {
-      console.error('分配教师错误:', error);
+    } catch {
       this.serverError(ctx, '分配教师失败');
     }
   }
@@ -112,8 +110,7 @@ export class CourseController extends BaseController {
 
       const result = await this.courseService.createClass(classData);
       this.handleServiceResponse(ctx, result);
-    } catch (error) {
-      console.error('创建班级错误:', error);
+    } catch {
       this.serverError(ctx, '创建班级失败');
     }
   }
@@ -135,8 +132,7 @@ export class CourseController extends BaseController {
 
       const result = await this.courseService.createTimeSlot(timeSlotData);
       this.handleServiceResponse(ctx, result);
-    } catch (error) {
-      console.error('创建时间段错误:', error);
+    } catch {
       this.serverError(ctx, '创建时间段失败');
     }
   }
@@ -158,8 +154,7 @@ export class CourseController extends BaseController {
 
       const result = await this.courseService.createSubCourse(subCourseData);
       this.handleServiceResponse(ctx, result);
-    } catch (error) {
-      console.error('创建子课程错误:', error);
+    } catch {
       this.serverError(ctx, '创建子课程失败');
     }
   }
@@ -183,8 +178,7 @@ export class CourseController extends BaseController {
       );
 
       this.handleServiceResponse(ctx, result);
-    } catch (error) {
-      console.error('获取课程列表错误:', error);
+    } catch {
       this.serverError(ctx, '获取课程列表失败');
     }
   }
@@ -204,10 +198,77 @@ export class CourseController extends BaseController {
 
       const result = await this.courseService.getCourseDetail(courseId);
       this.handleServiceResponse(ctx, result);
-    } catch (error) {
-      console.error('获取课程详情错误:', error);
+    } catch {
       this.serverError(ctx, '获取课程详情失败');
     }
+  }
+
+  /**
+   * 获取课程教师列表
+   */
+  async getCourseTeachers(ctx: AppContext): Promise<void> {
+    const courseId = parseInt(ctx.params.id);
+    if (isNaN(courseId)) {
+      this.error(ctx, '课程ID必须是数字', 400);
+      return;
+    }
+    const detail = await this.courseService.getCourseDetail(courseId);
+    if (detail.code !== 200) {
+      this.handleServiceResponse(ctx, detail);
+      return;
+    }
+    this.success(ctx, (detail.data as any)?.Teachers || [], '获取课程教师成功');
+  }
+
+  /**
+   * 获取课程班级列表
+   */
+  async getCourseClasses(ctx: AppContext): Promise<void> {
+    const courseId = parseInt(ctx.params.id);
+    if (isNaN(courseId)) {
+      this.error(ctx, '课程ID必须是数字', 400);
+      return;
+    }
+    const detail = await this.courseService.getCourseDetail(courseId);
+    if (detail.code !== 200) {
+      this.handleServiceResponse(ctx, detail);
+      return;
+    }
+    this.success(ctx, (detail.data as any)?.Classes || [], '获取课程班级成功');
+  }
+
+  /**
+   * 获取班级详细信息
+   */
+  async getClassDetail(ctx: AppContext): Promise<void> {
+    const classId = parseInt(ctx.params.classId);
+    if (isNaN(classId)) {
+      this.error(ctx, '班级ID必须是数字', 400);
+      return;
+    }
+    const classModel = (this.courseService as any).classModel;
+    const classInstance = await classModel.findByPk(classId);
+    if (!classInstance) {
+      this.error(ctx, '班级不存在', 404);
+      return;
+    }
+    this.success(ctx, classInstance, '获取班级详情成功');
+  }
+
+  /**
+   * 获取班级学生列表
+   */
+  async getClassStudents(ctx: AppContext): Promise<void> {
+    const classId = parseInt(ctx.params.classId);
+    if (isNaN(classId)) {
+      this.error(ctx, '班级ID必须是数字', 400);
+      return;
+    }
+    const classModel = (this.courseService as any).classModel;
+    const students = await classModel.findByPk(classId, {
+      include: [{ model: (this.courseService as any).userModel, through: { attributes: [] } }],
+    });
+    this.success(ctx, (students as any)?.Users || [], '获取班级学生成功');
   }
 
   /**
@@ -232,8 +293,7 @@ export class CourseController extends BaseController {
 
       const result = await this.courseService.getCoursesBySemester(academicYear, semester);
       this.handleServiceResponse(ctx, result);
-    } catch (error) {
-      console.error('获取学期课程错误:', error);
+    } catch {
       this.serverError(ctx, '获取学期课程失败');
     }
   }
@@ -256,8 +316,7 @@ export class CourseController extends BaseController {
 
       const result = await this.courseService.getTeacherCourses(teacherId, pagination);
       this.handleServiceResponse(ctx, result);
-    } catch (error) {
-      console.error('获取教师课程错误:', error);
+    } catch {
       this.serverError(ctx, '获取教师课程失败');
     }
   }
@@ -284,8 +343,7 @@ export class CourseController extends BaseController {
 
       const result = await this.courseService.updateCourseStatus(courseId, status);
       this.handleServiceResponse(ctx, result);
-    } catch (error) {
-      console.error('更新课程状态错误:', error);
+    } catch {
       this.serverError(ctx, '更新课程状态失败');
     }
   }

@@ -18,8 +18,8 @@ try {
   const configData = fs.readFileSync(configPath, 'utf8');
   const config = JSON.parse(configData);
   dbConfig = config[env];
-} catch (error) {
-  console.error('Failed to load database config:', error);
+} catch {
+  process.stderr.write('Failed to load database config\n');
   process.exit(1);
 }
 
@@ -63,7 +63,8 @@ const loadModels = async () => {
 
   for (const file of modelFiles) {
     const modelModule = await import(`./${file}`);
-    const model = modelModule.default(sequelize);
+    const factory = modelModule.default;
+    const model = factory(sequelize, DataTypes);
     models[model.name] = model;
   }
 
@@ -75,12 +76,11 @@ const loadModels = async () => {
   });
 };
 
-// 立即执行模型加载
-loadModels().catch(error => {
-  console.error('Failed to load models:', error);
+// 导出一个就绪Promise，供外部等待模型加载完成
+export const modelsReady = loadModels().catch(() => {
+  process.stderr.write('Failed to load models\n');
   process.exit(1);
 });
 
-// 导出sequelize实例和模型
 export { sequelize, Sequelize };
 export default models;

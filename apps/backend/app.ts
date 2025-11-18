@@ -10,53 +10,16 @@
 import Koa from 'koa';
 import bodyParser from 'koa-bodyparser';
 import Router from '@koa/router';
-import cors from '@koa/cors';
-import { fileURLToPath } from 'url';
-import { dirname, join } from 'path';
 
 // 导入自定义中间件
-import {
-  errorHandler,
-  notFoundHandler,
-  logger,
-  accessLogger,
-  rateLimit,
-  userRateLimit,
-  apiRateLimit,
-  strictRateLimit,
-  relaxedRateLimit,
-  defaultCors,
-  validateRequired,
-  validatePagination,
-  validateIdParam,
-} from './src/middlewares/index.js';
+import { errorHandler, logger, rateLimit, defaultCors } from './src/middlewares';
 
-// 导入路由
-import {
-  createUserRoutes,
-  createCourseRoutes,
-  createAttendanceRoutes,
-  createHomeworkRoutes,
-} from './src/routes/index.js';
-
-// 导入控制器
-import { UserController } from './src/controllers/UserController.js';
-import { CourseController } from './src/controllers/CourseController.js';
-import { AttendanceController } from './src/controllers/AttendanceController.js';
-import { HomeworkController } from './src/controllers/HomeworkController.js';
-
-// 导入服务
-import { UserService } from './src/services/UserService.js';
-import { CourseService } from './src/services/CourseService.js';
-import { AttendanceService } from './src/services/AttendanceService.js';
-import { HomeworkService } from './src/services/HomeworkService.js';
-
-// 获取当前文件路径
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
+// 导入路由配置与控制器初始化
+import { initializeControllers } from './src/initControllers';
+import { RouterConfig } from './src/controllers/RouterConfig';
 
 // 创建Koa应用实例
-const app = new Koa();
+const app = new (Koa as any)();
 
 // 创建路由实例
 const router = new Router();
@@ -65,29 +28,7 @@ const router = new Router();
 const PORT = process.env.PORT || 3000;
 const NODE_ENV = process.env.NODE_ENV || 'development';
 
-/**
- * 初始化服务层
- */
-function initializeServices() {
-  return {
-    userService: new UserService(),
-    courseService: new CourseService(),
-    attendanceService: new AttendanceService(),
-    homeworkService: new HomeworkService(),
-  };
-}
-
-/**
- * 初始化控制器
- */
-function initializeControllers(services: ReturnType<typeof initializeServices>) {
-  return {
-    userController: new UserController(services.userService),
-    courseController: new CourseController(services.courseService),
-    attendanceController: new AttendanceController(services.attendanceService),
-    homeworkController: new HomeworkController(services.homeworkService),
-  };
-}
+// 使用统一控制器与路由配置（ServiceFactory + Sequelize 模型注册）
 
 /**
  * 配置全局中间件
@@ -102,42 +43,11 @@ function setupGlobalMiddleware() {
   );
 
   // CORS中间件
-  app.use(
-    cors({
-      origin: ctx => {
-        const origin = ctx.get('Origin');
-        const allowedOrigins = [
-          'http://localhost:3000',
-          'http://localhost:3001',
-          'http://localhost:5173',
-          'http://localhost:5174',
-        ];
-
-        if (NODE_ENV === 'development') {
-          return origin || '*';
-        }
-
-        return allowedOrigins.includes(origin) ? origin : allowedOrigins[0];
-      },
-      credentials: true,
-      allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
-      allowHeaders: [
-        'Content-Type',
-        'Authorization',
-        'X-Requested-With',
-        'X-CSRF-Token',
-        'Accept',
-        'Accept-Language',
-        'Content-Language',
-      ],
-      exposeHeaders: ['X-Total-Count', 'X-Page', 'X-Page-Size'],
-      maxAge: 86400,
-    })
-  );
+  app.use(defaultCors);
 
   // 日志中间件
   app.use(
-    accessLogger({
+    logger({
       logBody: NODE_ENV === 'development',
       excludePaths: ['/health', '/favicon.ico'],
     })
@@ -165,47 +75,21 @@ function setupGlobalMiddleware() {
 /**
  * 配置路由
  */
-function setupRoutes(controllers: ReturnType<typeof initializeControllers>) {
-  // 健康检查路由
-  router.get('/health', ctx => {
-    ctx.body = {
-      status: 'ok',
-      timestamp: new Date().toISOString(),
-      uptime: process.uptime(),
-      environment: NODE_ENV,
-    };
-  });
-
-  // API路由
-  router.use('/api/users', createUserRoutes(controllers.userController));
-  router.use('/api/courses', createCourseRoutes(controllers.courseController));
-  router.use('/api/attendance', createAttendanceRoutes(controllers.attendanceController));
-  router.use('/api/homework', createHomeworkRoutes(controllers.homeworkController));
+function setupRoutes(controllers: RouterConfig) {
+  // 从控制器配置获取统一 API 路由
+  const apiRouter = controllers.getRouter();
+  app.use(apiRouter.routes());
+  app.use(apiRouter.allowedMethods());
 
   // 根路由
-  router.get('/', ctx => {
+  router.get('/', (ctx: any) => {
     ctx.body = {
       message: 'Welcome to CSISP Backend API',
       version: '1.0.0',
       environment: NODE_ENV,
       endpoints: {
-        health: '/health',
-        users: '/api/users',
-        courses: '/api/courses',
-        attendance: '/api/attendance',
-        homework: '/api/homework',
+        api: '/api',
       },
-    };
-  });
-
-  // 404处理
-  router.all('(.*)', ctx => {
-    ctx.status = 404;
-    ctx.body = {
-      code: 404,
-      message: 'API endpoint not found',
-      path: ctx.path,
-      method: ctx.method,
     };
   });
 
@@ -219,11 +103,8 @@ function setupRoutes(controllers: ReturnType<typeof initializeControllers>) {
  */
 async function startServer() {
   try {
-    // 初始化服务
-    const services = initializeServices();
-
-    // 初始化控制器
-    const controllers = initializeControllers(services);
+    // 初始化控制器与路由
+    const controllers = await initializeControllers();
 
     // 配置中间件
     setupGlobalMiddleware();
@@ -233,28 +114,27 @@ async function startServer() {
 
     // 启动HTTP服务器
     const server = app.listen(PORT, () => {
-      console.log(`🚀 CSISP Backend Server is running at http://localhost:${PORT}`);
-      console.log(`📊 Environment: ${NODE_ENV}`);
-      console.log(`🔧 Process ID: ${process.pid}`);
-      console.log(`📅 Started at: ${new Date().toISOString()}`);
+      process.stdout.write(
+        `server_start:${JSON.stringify({ port: PORT, env: NODE_ENV, pid: process.pid })}\n`
+      );
     });
 
     // 优雅关闭处理
     const gracefulShutdown = (signal: string) => {
-      console.log(`\n📤 Received ${signal}, starting graceful shutdown...`);
+      process.stdout.write(`shutdown_signal:${signal}\n`);
 
       server.close(() => {
-        console.log('✅ HTTP server closed');
+        process.stdout.write('server_closed\n');
 
         // 这里可以添加数据库连接关闭等清理操作
 
-        console.log('🎉 Graceful shutdown completed');
+        process.stdout.write('shutdown_done\n');
         process.exit(0);
       });
 
       // 强制关闭超时
       setTimeout(() => {
-        console.error('⚠️  Force shutdown after timeout');
+        process.stderr.write('force_shutdown_timeout\n');
         process.exit(1);
       }, 10000);
     };
@@ -264,17 +144,17 @@ async function startServer() {
     process.on('SIGINT', () => gracefulShutdown('SIGINT'));
 
     // 未捕获异常处理
-    process.on('uncaughtException', error => {
-      console.error('💥 Uncaught Exception:', error);
+    process.on('uncaughtException', () => {
+      process.stderr.write('uncaught_exception\n');
       gracefulShutdown('uncaughtException');
     });
 
-    process.on('unhandledRejection', (reason, promise) => {
-      console.error('💥 Unhandled Rejection at:', promise, 'reason:', reason);
+    process.on('unhandledRejection', () => {
+      process.stderr.write('unhandled_rejection\n');
       gracefulShutdown('unhandledRejection');
     });
-  } catch (error) {
-    console.error('❌ Failed to start server:', error);
+  } catch {
+    process.stderr.write('failed_start_server\n');
     process.exit(1);
   }
 }

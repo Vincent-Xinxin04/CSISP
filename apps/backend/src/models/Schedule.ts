@@ -1,5 +1,3 @@
-import { Status } from '@csisp/types';
-
 // Schedule类型定义
 export interface ScheduleType {
   id: number;

@@ -4,6 +4,8 @@
  */
 
 import Router from '@koa/router';
+import { AppContext } from '../types/context';
+import { Next } from '../types/middleware';
 import { HomeworkController } from '../controllers/HomeworkController';
 import { jwtAuth, requireTeacher, requireStudent } from '../middlewares/auth';
 import { validateRequired, validateIdParam, validatePagination } from '../middlewares/validation';
@@ -20,7 +22,7 @@ export function createHomeworkRoutes(homeworkController: HomeworkController): Ro
     jwtAuth(),
     requireTeacher,
     validateRequired(['classId', 'title', 'content', 'deadline']),
-    async ctx => {
+    async (ctx: AppContext, _next: Next) => {
       await homeworkController.createHomework(ctx);
     }
   );
@@ -34,7 +36,7 @@ export function createHomeworkRoutes(homeworkController: HomeworkController): Ro
     jwtAuth(),
     requireStudent,
     validateRequired(['homeworkId', 'userId']),
-    async ctx => {
+    async (ctx: AppContext, _next: Next) => {
       await homeworkController.submitHomework(ctx);
     }
   );
@@ -48,7 +50,7 @@ export function createHomeworkRoutes(homeworkController: HomeworkController): Ro
     jwtAuth(),
     validateIdParam('classId'),
     validatePagination(),
-    async ctx => {
+    async (ctx: AppContext, _next: Next) => {
       await homeworkController.getClassHomeworks(ctx);
     }
   );
@@ -57,7 +59,7 @@ export function createHomeworkRoutes(homeworkController: HomeworkController): Ro
    * 获取学生的作业提交情况
    * GET /api/homework/student/:userId?classId=1
    */
-  router.get('/student/:userId', jwtAuth(), validateIdParam('userId'), async ctx => {
+  router.get('/student/:userId', jwtAuth(), validateIdParam('userId'), async (ctx: AppContext) => {
     await homeworkController.getStudentSubmissions(ctx);
   });
 
@@ -70,7 +72,7 @@ export function createHomeworkRoutes(homeworkController: HomeworkController): Ro
     jwtAuth(),
     requireTeacher,
     validateRequired(['submissionId', 'score']),
-    async ctx => {
+    async (ctx: AppContext, _next: Next) => {
       await homeworkController.gradeHomework(ctx);
     }
   );
@@ -85,7 +87,7 @@ export function createHomeworkRoutes(homeworkController: HomeworkController): Ro
     requireTeacher,
     validateIdParam('homeworkId'),
     validatePagination(),
-    async ctx => {
+    async (ctx: AppContext, _next: Next) => {
       await homeworkController.getHomeworkSubmissions(ctx);
     }
   );
@@ -99,7 +101,7 @@ export function createHomeworkRoutes(homeworkController: HomeworkController): Ro
     jwtAuth(),
     requireTeacher,
     validateIdParam('homeworkId'),
-    async ctx => {
+    async (ctx: AppContext, _next: Next) => {
       await homeworkController.getHomeworkStats(ctx);
     }
   );
@@ -113,7 +115,7 @@ export function createHomeworkRoutes(homeworkController: HomeworkController): Ro
     jwtAuth(),
     requireTeacher,
     validateIdParam('homeworkId'),
-    async ctx => {
+    async (ctx: AppContext, _next: Next) => {
       await homeworkController.updateHomework(ctx);
     }
   );
@@ -127,7 +129,7 @@ export function createHomeworkRoutes(homeworkController: HomeworkController): Ro
     jwtAuth(),
     requireTeacher,
     validateIdParam('homeworkId'),
-    async ctx => {
+    async (ctx: AppContext, _next: Next) => {
       await homeworkController.deleteHomework(ctx);
     }
   );
@@ -136,7 +138,7 @@ export function createHomeworkRoutes(homeworkController: HomeworkController): Ro
    * 获取作业详细信息
    * GET /api/homework/:homeworkId
    */
-  router.get('/:homeworkId', jwtAuth(), validateIdParam('homeworkId'), async ctx => {
+  router.get('/:homeworkId', jwtAuth(), validateIdParam('homeworkId'), async (ctx: AppContext) => {
     await homeworkController.getHomeworkDetail(ctx);
   });
 
@@ -149,7 +151,7 @@ export function createHomeworkRoutes(homeworkController: HomeworkController): Ro
     jwtAuth(),
     validateIdParam('homeworkId'),
     validateIdParam('userId'),
-    async ctx => {
+    async (ctx: AppContext, _next: Next) => {
       await homeworkController.getStudentHomeworkDetail(ctx);
     }
   );

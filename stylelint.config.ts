@@ -12,6 +12,7 @@ export default {
     'property-no-vendor-prefix': null,
     'value-no-vendor-prefix': null,
     'no-empty-source': null,
+    'block-no-empty': null,
   },
   ignoreFiles: ['**/node_modules/**', '**/dist/**', '**/build/**'],
   overrides: [

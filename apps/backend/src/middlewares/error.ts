@@ -19,13 +19,14 @@ export const errorHandler = (options: ErrorMiddlewareOptions = {}): Middleware =
     } catch (error: any) {
       // 记录错误日志
       if (logErrors) {
-        console.error('错误处理中间件捕获错误:', {
+        const payload = {
           method: ctx.method,
           url: ctx.url,
           error: error.message,
           stack: error.stack,
           userId: ctx.userId,
-        });
+        };
+        process.stderr.write(`error:${JSON.stringify(payload)}\n`);
       }
 
       // 设置默认错误状态码

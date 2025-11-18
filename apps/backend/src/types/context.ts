@@ -21,32 +21,23 @@ export interface AppContext extends KoaContext {
   userId?: number;
   user?: User;
   roles?: UserRoleType[];
-  state: KoaContext['state'] & {
+  state: any & {
     user?: User;
     userId?: number;
     roles?: UserRoleType[];
   };
-  // 保持Koa原始属性
-  params: KoaContext['params'];
-  query: KoaContext['query'];
-  body: KoaContext['body'];
-  status: KoaContext['status'];
-  method: KoaContext['method'];
-  url: KoaContext['url'];
-  path: KoaContext['path'];
-  headers: KoaContext['headers'];
-  get: KoaContext['get'];
-  set: KoaContext['set'];
-  ip: KoaContext['ip'];
-  is: KoaContext['is'];
-  app: KoaContext['app'];
-  req: KoaContext['req'];
-  res: KoaContext['res'];
-  originalUrl: KoaContext['originalUrl'];
-  cookies: KoaContext['cookies'];
-  throw: KoaContext['throw'];
-  assert: KoaContext['assert'];
-  respond: KoaContext['respond'];
+  body: any;
+  status: number;
+  method: string;
+  url: string;
+  path: string;
+  headers: Record<string, any>;
+  get: (name: string) => string;
+  set: (name: string, value: string) => void;
+  ip: string;
+  is: (types: string | string[]) => boolean;
+  query: Record<string, any>;
+  params: Record<string, any>;
 }
 
 /**

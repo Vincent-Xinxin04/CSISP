@@ -4,6 +4,8 @@
  */
 
 import Router from '@koa/router';
+import { AppContext } from '../types/context';
+import { Next } from '../types/middleware';
 import { AttendanceController } from '../controllers/AttendanceController';
 import { jwtAuth, requireTeacher, requireStudent } from '../middlewares/auth';
 import { validateRequired, validateIdParam, validatePagination } from '../middlewares/validation';
@@ -103,7 +105,7 @@ export function createAttendanceRoutes(attendanceController: AttendanceControlle
     jwtAuth(),
     requireTeacher,
     validateIdParam('recordId'),
-    async ctx => {
+    async (ctx: AppContext, _next: Next) => {
       await attendanceController.updateAttendanceRecord(ctx);
     }
   );
@@ -112,7 +114,7 @@ export function createAttendanceRoutes(attendanceController: AttendanceControlle
    * 获取活跃的考勤任务
    * GET /api/attendance/active-tasks?classId=1
    */
-  router.get('/active-tasks', jwtAuth(), async ctx => {
+  router.get('/active-tasks', jwtAuth(), async (ctx: AppContext) => {
     await attendanceController.getActiveTasks(ctx);
   });
 
@@ -125,7 +127,7 @@ export function createAttendanceRoutes(attendanceController: AttendanceControlle
     jwtAuth(),
     validateIdParam('userId'),
     validatePagination(),
-    async ctx => {
+    async (ctx: AppContext, _next: Next) => {
       await attendanceController.getStudentAttendanceRecords(ctx);
     }
   );
@@ -139,7 +141,7 @@ export function createAttendanceRoutes(attendanceController: AttendanceControlle
     jwtAuth(),
     requireTeacher,
     validateRequired(['recordIds', 'status']),
-    async ctx => {
+    async (ctx: AppContext, _next: Next) => {
       await attendanceController.batchUpdateAttendanceRecords(ctx);
     }
   );
@@ -148,7 +150,7 @@ export function createAttendanceRoutes(attendanceController: AttendanceControlle
    * 导出考勤数据
    * GET /api/attendance/export?classId=1&startDate=2024-01-01&endDate=2024-01-31
    */
-  router.get('/export', jwtAuth(), requireTeacher, async ctx => {
+  router.get('/export', jwtAuth(), requireTeacher, async (ctx: AppContext) => {
     await attendanceController.exportAttendanceData(ctx);
   });
 

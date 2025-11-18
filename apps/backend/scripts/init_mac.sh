@@ -391,30 +391,21 @@ chmod 755 apps/backend/uploads apps/backend/uploads/temp apps/backend/uploads/ho
 
 log_success "目录结构创建完成"
 
-# 检查seed_data.js文件是否存在
-if [ ! -f "apps/backend/scripts/seed_data.js" ]; then
-    # 检查seed_data.ts文件是否存在
-    if [ ! -f "apps/backend/scripts/seed_data.ts" ]; then
-        log_error "未找到种子数据脚本 (apps/backend/scripts/seed_data.js 或 seed_data.ts)"
-        exit 1
-    else
-        # 使用tsx直接运行种子数据脚本
-        log_info "生成种子数据..."
-        (cd apps/backend && pnpm exec tsx scripts/seed_data.ts)
-    fi
-else
-    # 运行种子数据脚本
-    log_info "生成种子数据..."
-    (cd apps/backend && node scripts/seed_data.js)
-fi
+# 使用 Sequelize CLI 执行所有种子
+log_info "执行 CLI 种子数据..."
+(cd apps/backend && pnpm exec sequelize-cli db:seed:all)
 
 if [ $? -ne 0 ]; then
-    log_error "种子数据生成失败"
-    log_warning "请检查seed_data脚本内容和数据库连接"
+    log_error "CLI 种子数据执行失败"
+    log_warning "请检查 seeders 目录中的脚本与数据库连接配置"
     exit 1
 fi
 
-log_success "种子数据生成完成"
+log_success "CLI 种子数据执行完成"
+
+# 统计并展示数据规模
+log_info "统计数据规模..."
+(cd apps/backend && node scripts/check_seed_stats.mjs)
 
 # 显示服务状态
 log_info "\n📊 服务状态检查:"
@@ -449,7 +440,7 @@ echo "   • 目录结构创建"
 echo -e "\n${BLUE}📚 文档位置:${NC}"
 echo "   • 后端设计文档: docs/project/后端设计文档.md"
 echo "   • 数据库设计文档: docs/project/数据库设计文档.md"
-echo "   • 种子数据脚本: apps/backend/scripts/seed_data.js"
+echo "   • 种子数据脚本: apps/backend/sequelize/seeders/*.cjs"
 
 echo -e "\n${BLUE}🔧 常用命令:${NC}"
 echo "   • 启动开发服务器: pnpm dev"
@@ -457,9 +448,9 @@ echo "   • 构建项目: pnpm build"
 echo "   • 停止服务: docker-compose down"
 
 echo -e "\n${YELLOW}💡 如果需要重新生成数据:${NC}"
-echo "   pnpm sequelize-cli db:migrate:undo:all"
-echo "   pnpm sequelize-cli db:migrate"
-echo "   node apps/backend/scripts/seed_data.js"
+echo "   pnpm exec sequelize-cli db:migrate:undo:all"
+echo "   pnpm exec sequelize-cli db:migrate"
+echo "   pnpm exec sequelize-cli db:seed:all"
 
 # 显示额外的提示信息
 echo -e "\n${YELLOW}ℹ️  注意事项:${NC}"

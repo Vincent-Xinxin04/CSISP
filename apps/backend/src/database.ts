@@ -17,8 +17,8 @@ try {
   const configData = fs.readFileSync(configPath, 'utf8');
   const config = JSON.parse(configData);
   dbConfig = config[env];
-} catch (error) {
-  console.error('Failed to load database config:', error);
+} catch {
+  process.stderr.write('Failed to load database config\n');
   process.exit(1);
 }
 
@@ -27,17 +27,19 @@ const sequelize = new Sequelize(dbConfig.database, dbConfig.username, dbConfig.p
   host: dbConfig.host,
   port: dbConfig.port,
   dialect: 'postgres',
-  logging: false,
+  logging: dbConfig.logging ?? false,
+  benchmark: dbConfig.benchmark ?? false,
+  pool: dbConfig.pool ?? { max: 20, min: 5, acquire: 30000, idle: 10000 },
 });
 
 // 测试数据库连接
 async function testConnection() {
   try {
     await sequelize.authenticate();
-    console.log('✅ Database connection has been established successfully.');
+    process.stdout.write('Database connection established\n');
     return true;
-  } catch (error) {
-    console.error('❌ Unable to connect to the database:', error);
+  } catch {
+    process.stderr.write('Unable to connect to the database\n');
     return false;
   }
 }
@@ -46,10 +48,10 @@ async function testConnection() {
 async function syncModels(force = false) {
   try {
     await sequelize.sync({ force });
-    console.log('✅ Database models have been synchronized successfully.');
+    process.stdout.write('Database models synchronized\n');
     return true;
-  } catch (error) {
-    console.error('❌ Failed to synchronize database models:', error);
+  } catch {
+    process.stderr.write('Failed to synchronize database models\n');
     return false;
   }
 }
@@ -58,10 +60,10 @@ async function syncModels(force = false) {
 async function closeConnection() {
   try {
     await sequelize.close();
-    console.log('✅ Database connection has been closed successfully.');
+    process.stdout.write('Database connection closed\n');
     return true;
-  } catch (error) {
-    console.error('❌ Failed to close database connection:', error);
+  } catch {
+    process.stderr.write('Failed to close database connection\n');
     return false;
   }
 }

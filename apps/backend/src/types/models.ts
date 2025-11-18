@@ -1,6 +1,6 @@
 // 数据库模型相关类型定义
 import { Model, Optional, ModelStatic, Sequelize } from 'sequelize';
-import { Status, UserRoleType, AttendanceStatus, WeekDay } from '@csisp/types';
+import { Status, UserRoleType, AttendanceStatus, Semester, MajorList } from '@csisp/types';
 
 // 作业状态类型
 export type HomeworkStatus = 'pending' | 'submitted' | 'graded' | 'late';
@@ -98,6 +98,9 @@ export interface CourseAttributes {
   courseName: string;
   courseCode: string;
   status: Status;
+  semester: Semester;
+  academicYear: number;
+  availableMajors: MajorList;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -154,8 +157,8 @@ export interface TeacherModel
  */
 export interface TimeSlotAttributes {
   id: number;
-  courseId: number;
-  weekDay: WeekDay;
+  subCourseId: number;
+  weekday: number;
   startTime: string;
   endTime: string;
   location?: string;

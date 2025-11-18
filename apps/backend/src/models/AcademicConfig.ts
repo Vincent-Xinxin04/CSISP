@@ -18,7 +18,7 @@ export class AcademicConfig implements SemesterConfig {
     startDate: Date,
     endDate: Date,
     isCurrent: boolean = false,
-    status: Status = Status.ACTIVE,
+    status: Status = Status.Active,
     createdAt: Date = new Date(),
     updatedAt: Date = new Date()
   ) {

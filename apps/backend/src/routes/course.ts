@@ -4,6 +4,8 @@
  */
 
 import Router from '@koa/router';
+import { AppContext } from '../types/context';
+import { Next } from '../types/middleware';
 import { CourseController } from '../controllers/CourseController';
 import { jwtAuth, requireAdmin, requireTeacher } from '../middlewares/auth';
 import { validateRequired, validateIdParam, validatePagination } from '../middlewares/validation';
@@ -20,7 +22,7 @@ export function createCourseRoutes(courseController: CourseController): Router {
     jwtAuth(),
     requireAdmin,
     validateRequired(['courseName', 'courseCode', 'semester', 'academicYear', 'availableMajors']),
-    async ctx => {
+    async (ctx: AppContext, _next: Next) => {
       await courseController.createCourse(ctx);
     }
   );
@@ -35,7 +37,7 @@ export function createCourseRoutes(courseController: CourseController): Router {
     requireAdmin,
     validateIdParam('id'),
     validateRequired(['teacherIds']),
-    async ctx => {
+    async (ctx: AppContext, _next: Next) => {
       await courseController.assignTeachers(ctx);
     }
   );
@@ -56,7 +58,7 @@ export function createCourseRoutes(courseController: CourseController): Router {
       'academicYear',
       'maxStudents',
     ]),
-    async ctx => {
+    async (ctx: AppContext, _next: Next) => {
       await courseController.createClass(ctx);
     }
   );
@@ -70,7 +72,7 @@ export function createCourseRoutes(courseController: CourseController): Router {
     jwtAuth(),
     requireTeacher,
     validateRequired(['subCourseId', 'weekday', 'startTime', 'endTime', 'location']),
-    async ctx => {
+    async (ctx: AppContext, _next: Next) => {
       await courseController.createTimeSlot(ctx);
     }
   );
@@ -84,7 +86,7 @@ export function createCourseRoutes(courseController: CourseController): Router {
     jwtAuth(),
     requireTeacher,
     validateRequired(['courseId', 'subCourseCode', 'teacherId', 'academicYear']),
-    async ctx => {
+    async (ctx: AppContext, _next: Next) => {
       await courseController.createSubCourse(ctx);
     }
   );
@@ -93,7 +95,7 @@ export function createCourseRoutes(courseController: CourseController): Router {
    * 获取课程列表（支持专业筛选）
    * GET /api/courses?major=计算机科学&semester=1&page=1&size=10
    */
-  router.get('/', jwtAuth(), validatePagination(), async ctx => {
+  router.get('/', jwtAuth(), validatePagination(), async (ctx: AppContext) => {
     await courseController.getCourses(ctx);
   });
 
@@ -101,7 +103,7 @@ export function createCourseRoutes(courseController: CourseController): Router {
    * 获取课程详细信息
    * GET /api/courses/:id
    */
-  router.get('/:id', jwtAuth(), validateIdParam('id'), async ctx => {
+  router.get('/:id', jwtAuth(), validateIdParam('id'), async (ctx: AppContext) => {
     await courseController.getCourseDetail(ctx);
   });
 
@@ -109,7 +111,7 @@ export function createCourseRoutes(courseController: CourseController): Router {
    * 获取课程教师列表
    * GET /api/courses/:id/teachers
    */
-  router.get('/:id/teachers', jwtAuth(), validateIdParam('id'), async ctx => {
+  router.get('/:id/teachers', jwtAuth(), validateIdParam('id'), async (ctx: AppContext) => {
     await courseController.getCourseTeachers(ctx);
   });
 
@@ -117,17 +119,28 @@ export function createCourseRoutes(courseController: CourseController): Router {
    * 获取课程班级列表
    * GET /api/courses/:id/classes?page=1&size=10
    */
-  router.get('/:id/classes', jwtAuth(), validateIdParam('id'), validatePagination(), async ctx => {
-    await courseController.getCourseClasses(ctx);
-  });
+  router.get(
+    '/:id/classes',
+    jwtAuth(),
+    validateIdParam('id'),
+    validatePagination(),
+    async (ctx: AppContext) => {
+      await courseController.getCourseClasses(ctx);
+    }
+  );
 
   /**
    * 获取班级详细信息
    * GET /api/courses/classes/:classId
    */
-  router.get('/classes/:classId', jwtAuth(), validateIdParam('classId'), async ctx => {
-    await courseController.getClassDetail(ctx);
-  });
+  router.get(
+    '/classes/:classId',
+    jwtAuth(),
+    validateIdParam('classId'),
+    async (ctx: AppContext) => {
+      await courseController.getClassDetail(ctx);
+    }
+  );
 
   /**
    * 获取班级学生列表
@@ -139,7 +152,7 @@ export function createCourseRoutes(courseController: CourseController): Router {
     requireTeacher,
     validateIdParam('classId'),
     validatePagination(),
-    async ctx => {
+    async (ctx: AppContext, _next: Next) => {
       await courseController.getClassStudents(ctx);
     }
   );
@@ -153,7 +166,7 @@ export function createCourseRoutes(courseController: CourseController): Router {
     jwtAuth(),
     validateIdParam('semester'),
     validatePagination(),
-    async ctx => {
+    async (ctx: AppContext, _next: Next) => {
       await courseController.getCoursesBySemester(ctx);
     }
   );
@@ -168,7 +181,7 @@ export function createCourseRoutes(courseController: CourseController): Router {
     requireTeacher,
     validateIdParam('teacherId'),
     validatePagination(),
-    async ctx => {
+    async (ctx: AppContext, _next: Next) => {
       await courseController.getTeacherCourses(ctx);
     }
   );

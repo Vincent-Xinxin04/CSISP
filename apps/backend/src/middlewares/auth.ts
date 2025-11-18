@@ -6,7 +6,8 @@
 import { Middleware, AuthMiddlewareOptions, Next } from '../types/middleware';
 import { AppContext } from '../types/context';
 import jwt from 'jsonwebtoken';
-import models from '../models';
+import { Op } from 'sequelize';
+import models from '../../sequelize/models';
 
 /**
  * JWT认证中间件
@@ -47,7 +48,7 @@ export const jwtAuth = (options: AuthMiddlewareOptions = {}): Middleware => {
       let decoded: any;
       try {
         decoded = jwt.verify(token, process.env.JWT_SECRET || 'default-secret');
-      } catch (error) {
+      } catch {
         ctx.status = 401;
         ctx.body = { code: 401, message: '认证令牌无效或已过期' };
         return;
@@ -80,6 +81,7 @@ export const jwtAuth = (options: AuthMiddlewareOptions = {}): Middleware => {
       });
 
       const userRoleCodes = userRoles.map((ur: any) => ur.Role?.code).filter(Boolean);
+      const userRoleIds = userRoles.map((ur: any) => ur.Role?.id).filter(Boolean);
 
       // 检查角色权限
       if (roles.length > 0) {
@@ -91,14 +93,36 @@ export const jwtAuth = (options: AuthMiddlewareOptions = {}): Middleware => {
         }
       }
 
+      // 检查业务权限
+      if (permissions.length > 0 && userRoleIds.length > 0) {
+        const rolePermissions = await (models.RolePermission as any).findAll({
+          where: { role_id: { [Op.in]: userRoleIds } },
+          include: [
+            {
+              model: models.Permission as any,
+              attributes: ['code'],
+            },
+          ],
+        });
+        const permissionCodes = rolePermissions
+          .map((rp: any) => rp.Permission?.code)
+          .filter(Boolean);
+        const hasRequiredPermission = permissions.some(p => permissionCodes.includes(p));
+        if (!hasRequiredPermission) {
+          ctx.status = 403;
+          ctx.body = { code: 403, message: '权限不足' };
+          return;
+        }
+      }
+
       // 将用户信息添加到上下文
       ctx.userId = user.id;
+      ctx.state.userId = user.id;
       ctx.user = user;
       ctx.roles = userRoleCodes;
 
       await next();
-    } catch (error) {
-      console.error('认证中间件错误:', error);
+    } catch {
       ctx.status = 500;
       ctx.body = { code: 500, message: '认证处理失败' };
     }
@@ -119,7 +143,7 @@ export const requireRole = (roles: string | string[]): Middleware => {
       return;
     }
 
-    const hasRole = roleArray.some(role => ctx.roles!.includes(role));
+    const hasRole = roleArray.some(role => ctx.roles!.includes(role as any));
     if (!hasRole) {
       ctx.status = 403;
       ctx.body = { code: 403, message: '需要角色: ' + roleArray.join(', ') };

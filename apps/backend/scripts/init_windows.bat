@@ -439,27 +439,20 @@ mkdir apps\backend\uploads\homework 2>nul
 
 call :log_success "目录结构创建完成"
 
-:: 检查seed_data.js文件是否存在
-if not exist "apps\backend\scripts\seed_data.js" (
-    call :log_error "未找到种子数据脚本 (apps\backend\scripts\seed_data.js)"
-    pause
-    exit /b 1
-)
-
-:: 运行种子数据脚本
-call :log_info "生成种子数据..."
+:: 执行 Sequelize CLI 种子
+call :log_info "执行 CLI 种子数据..."
 cd /d "apps\backend"
-pnpm exec tsx scripts\seed_data.ts
+pnpm exec sequelize-cli db:seed:all
 cd /d "%PROJECT_ROOT%"
 
 if errorlevel 1 (
-    call :log_error "种子数据生成失败"
-    call :log_warning "请检查seed_data.ts脚本内容和数据库连接"
+    call :log_error "CLI 种子数据执行失败"
+    call :log_warning "请检查 seeders 目录中的脚本与数据库连接配置"
     pause
     exit /b 1
 )
 
-call :log_success "种子数据生成完成"
+call :log_success "CLI 种子数据执行完成"
 
 :: 注意：测试运行不再作为初始化脚本的一部分，避免影响初始化流程
 
@@ -510,7 +503,7 @@ echo.
 echo %BLUE%📚 文档位置:%NC%
 echo    • 后端设计文档: docs\project\后端设计文档.md
 echo    • 数据库设计文档: docs\project\数据库设计文档.md
-echo    • 种子数据脚本: apps\backend\scripts\seed_data.ts
+echo    • 种子数据脚本: apps\backend\sequelize\seeders\*.cjs
 
 echo.
 echo %BLUE%🔧 常用命令:%NC%
@@ -522,7 +515,7 @@ echo.
 echo %YELLOW%💡 如果需要重新生成数据:%NC%
 echo    pnpm sequelize-cli db:migrate:undo:all
 echo    pnpm sequelize-cli db:migrate
-echo    pnpm exec tsx apps\backend\scripts\seed_data.ts
+echo    pnpm exec sequelize-cli db:seed:all
 
 :: 显示额外的提示信息
 echo.

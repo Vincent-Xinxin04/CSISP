@@ -65,11 +65,15 @@ export const upload = (options: UploadMiddlewareOptions = {}): Middleware => {
             return;
           }
 
+          const name = preserveFilename
+            ? file.originalname || file.name
+            : file.filename || file.name;
+          const urlBase = uploadDir.endsWith('/') ? uploadDir : `${uploadDir}/`;
           files.push({
-            originalname: file.originalname || file.name,
+            originalname: name,
             mimetype: file.mimetype || file.type,
             size: file.size,
-            url: `/uploads/${file.filename || file.name}`,
+            url: `${urlBase}${file.filename || file.name}`,
           });
         }
       }
@@ -79,8 +83,7 @@ export const upload = (options: UploadMiddlewareOptions = {}): Middleware => {
       ctx.request.body = { ...ctx.request.body, ...fields };
 
       await next();
-    } catch (error: any) {
-      console.error('文件上传处理失败:', error);
+    } catch {
       ctx.status = 500;
       ctx.body = { code: 500, message: '文件上传处理失败' };
     }

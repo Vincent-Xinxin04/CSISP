@@ -39,8 +39,7 @@ export class UserController extends BaseController {
 
       const result = await this.userService.register(userData);
       this.handleServiceResponse(ctx, result);
-    } catch (error) {
-      console.error('用户注册错误:', error);
+    } catch {
       this.serverError(ctx, '用户注册失败');
     }
   }
@@ -62,8 +61,7 @@ export class UserController extends BaseController {
 
       const result = await this.userService.login(loginData);
       this.handleServiceResponse(ctx, result);
-    } catch (error) {
-      console.error('用户登录错误:', error);
+    } catch {
       this.serverError(ctx, '用户登录失败');
     }
   }
@@ -76,7 +74,7 @@ export class UserController extends BaseController {
   async getCurrentUser(ctx: AppContext): Promise<void> {
     try {
       // 从JWT中间件获取用户信息
-      const userId = ctx.state.user?.userId;
+      const userId = ctx.userId || ctx.state.userId;
       if (!userId) {
         this.unauthorized(ctx, '未登录或登录已过期');
         return;
@@ -84,8 +82,7 @@ export class UserController extends BaseController {
 
       const result = await this.userService.findById(userId);
       this.handleServiceResponse(ctx, result);
-    } catch (error) {
-      console.error('获取当前用户信息错误:', error);
+    } catch {
       this.serverError(ctx, '获取用户信息失败');
     }
   }
@@ -105,8 +102,7 @@ export class UserController extends BaseController {
 
       const result = await this.userService.findById(userId);
       this.handleServiceResponse(ctx, result);
-    } catch (error) {
-      console.error('获取用户信息错误:', error);
+    } catch {
       this.serverError(ctx, '获取用户信息失败');
     }
   }
@@ -126,8 +122,7 @@ export class UserController extends BaseController {
 
       const result = await this.userService.findByStudentId(studentId);
       this.handleServiceResponse(ctx, result);
-    } catch (error) {
-      console.error('根据学号获取用户信息错误:', error);
+    } catch {
       this.serverError(ctx, '获取用户信息失败');
     }
   }
@@ -159,8 +154,7 @@ export class UserController extends BaseController {
 
       const result = await this.userService.update(userId, updateData);
       this.handleServiceResponse(ctx, result);
-    } catch (error) {
-      console.error('更新用户信息错误:', error);
+    } catch {
       this.serverError(ctx, '更新用户信息失败');
     }
   }
@@ -185,8 +179,7 @@ export class UserController extends BaseController {
 
       const result = await this.userService.findAllWithPagination(pagination, where);
       this.handleServiceResponse(ctx, result);
-    } catch (error) {
-      console.error('获取用户列表错误:', error);
+    } catch {
       this.serverError(ctx, '获取用户列表失败');
     }
   }
@@ -231,8 +224,7 @@ export class UserController extends BaseController {
 
       const result = await this.userService.bulkCreate(usersData);
       this.handleServiceResponse(ctx, result);
-    } catch (error) {
-      console.error('批量创建用户错误:', error);
+    } catch {
       this.serverError(ctx, '批量创建用户失败');
     }
   }
@@ -264,8 +256,7 @@ export class UserController extends BaseController {
 
       const result = await this.userService.assignRoles(userId, roleIds);
       this.handleServiceResponse(ctx, result);
-    } catch (error) {
-      console.error('分配角色错误:', error);
+    } catch {
       this.serverError(ctx, '分配角色失败');
     }
   }
@@ -285,8 +276,7 @@ export class UserController extends BaseController {
 
       const result = await this.userService.getUserRoles(userId);
       this.handleServiceResponse(ctx, result);
-    } catch (error) {
-      console.error('获取用户角色错误:', error);
+    } catch {
       this.serverError(ctx, '获取用户角色失败');
     }
   }
@@ -300,8 +290,7 @@ export class UserController extends BaseController {
     try {
       const result = await this.userService.getUserStats();
       this.handleServiceResponse(ctx, result);
-    } catch (error) {
-      console.error('获取用户统计错误:', error);
+    } catch {
       this.serverError(ctx, '获取用户统计失败');
     }
   }

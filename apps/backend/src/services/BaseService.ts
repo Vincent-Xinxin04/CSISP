@@ -98,7 +98,7 @@ export abstract class BaseService {
         return {
           code: 404,
           message: '记录不存在',
-        } as ApiResponse<boolean>;
+        };
       }
 
       return {
@@ -107,7 +107,7 @@ export abstract class BaseService {
         data: true,
       };
     } catch (error) {
-      return this.handleError(error, '删除失败') as ApiResponse<boolean>;
+      return this.handleError<boolean>(error, '删除失败');
     }
   }
 
@@ -146,7 +146,7 @@ export abstract class BaseService {
         },
       };
     } catch (error) {
-      return this.handleError(error, '查询失败') as ApiResponse<PaginationResponse<any>>;
+      return this.handleError<PaginationResponse<any>>(error, '查询失败');
     }
   }
 
@@ -168,7 +168,7 @@ export abstract class BaseService {
         data: records,
       };
     } catch (error) {
-      return this.handleError(error, '查询失败') as ApiResponse<any[]>;
+      return this.handleError<any[]>(error, '查询失败');
     }
   }
 
@@ -178,26 +178,27 @@ export abstract class BaseService {
    * @param message 错误消息
    * @returns 错误响应
    */
-  protected handleError(error: any, message: string): ApiResponse<null> {
-    console.error(`${this.model.name} Service Error:`, error);
+  protected handleError<T>(error: any, message: string): ApiResponse<T> {
+    const payload = { model: this.model?.name, error: String(error?.message || error) };
+    process.stderr.write(`service_error:${JSON.stringify(payload)}\n`);
 
     if (error.name === 'SequelizeUniqueConstraintError') {
       return {
         code: 409,
         message: '数据已存在',
-      };
+      } as ApiResponse<T>;
     }
 
     if (error.name === 'SequelizeValidationError') {
       return {
         code: 400,
         message: error.errors[0]?.message || '数据验证失败',
-      };
+      } as ApiResponse<T>;
     }
 
     return {
       code: 500,
       message: message,
-    };
+    } as ApiResponse<T>;
   }
 }

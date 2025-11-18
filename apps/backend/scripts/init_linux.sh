@@ -426,23 +426,16 @@ sudo chown $USER:$USER -R apps/backend/uploads apps/backend/logs
 
 log_success "目录结构创建完成"
 
-# 检查seed_data.js文件是否存在
-if [ ! -f "apps/backend/scripts/seed_data.js" ]; then
-    log_error "未找到种子数据脚本 (apps/backend/scripts/seed_data.js)"
-    exit 1
-fi
-
-# 运行种子数据脚本
-log_info "生成种子数据..."
-(cd apps/backend && pnpm exec tsx scripts/seed_data.ts)
+log_info "执行 CLI 种子数据..."
+(cd apps/backend && pnpm exec sequelize-cli db:seed:all)
 
 if [ $? -ne 0 ]; then
-    log_error "种子数据生成失败"
-    log_warning "请检查seed_data.ts脚本内容和数据库连接"
+    log_error "CLI 种子数据执行失败"
+    log_warning "请检查 seeders 目录中的脚本与数据库连接配置"
     exit 1
 fi
 
-log_success "种子数据生成完成"
+log_success "CLI 种子数据执行完成"
 
 # 注意：测试运行不再作为初始化脚本的一部分，避免影响初始化流程
 
@@ -479,7 +472,7 @@ echo "   • 目录结构创建"
 echo -e "\n${BLUE}📚 文档位置:${NC}"
 echo "   • 后端设计文档: docs/project/后端设计文档.md"
 echo "   • 数据库设计文档: docs/project/数据库设计文档.md"
-echo "   • 种子数据脚本: apps/backend/scripts/seed_data.ts"
+echo "   • 种子数据脚本: apps/backend/sequelize/seeders/*.cjs"
 
 echo -e "\n${BLUE}🔧 常用命令:${NC}"
 echo "   • 启动开发服务器: pnpm dev"
@@ -489,7 +482,7 @@ echo "   • 停止服务: docker-compose down"
 echo -e "\n${YELLOW}💡 如果需要重新生成数据:${NC}"
 echo "   pnpm sequelize-cli db:migrate:undo:all"
 echo "   pnpm sequelize-cli db:migrate"
-echo "   pnpm exec tsx apps/backend/scripts/seed_data.ts"
+echo "   pnpm exec sequelize-cli db:seed:all"
 
 # 显示额外的提示信息
 echo -e "\n${YELLOW}ℹ️  注意事项:${NC}"

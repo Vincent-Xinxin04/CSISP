@@ -6,7 +6,10 @@
     "host": "localhost",
     "port": 5433,
     "dialect": "postgres",
-    "timezone": "+08:00"
+    "timezone": "+08:00",
+    "logging": false,
+    "benchmark": false,
+    "pool": { "max": 20, "min": 5, "acquire": 30000, "idle": 10000 }
   },
   "test": {
     "username": "admin",
@@ -16,7 +19,9 @@
     "port": 5433,
     "dialect": "postgres",
     "timezone": "+08:00",
-    "logging": false
+    "logging": false,
+    "benchmark": false,
+    "pool": { "max": 10, "min": 2, "acquire": 20000, "idle": 5000 }
   },
   "production": {
     "username": "admin",
@@ -26,6 +31,8 @@
     "port": 5433,
     "dialect": "postgres",
     "timezone": "+08:00",
-    "logging": false
+    "logging": false,
+    "benchmark": true,
+    "pool": { "max": 30, "min": 5, "acquire": 30000, "idle": 10000 }
   }
 }
