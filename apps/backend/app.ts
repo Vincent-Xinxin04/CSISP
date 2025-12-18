@@ -52,12 +52,12 @@ function setupGlobalMiddleware() {
   );
 
   // CORS中间件
-  ensure(defaultCors, 'defaultCors');
+  ensure(defaultCors({}), 'defaultCors');
 
   // 日志中间件
   ensure(
     logger({
-      logBody: NODE_ENV === 'development',
+      logResponse: NODE_ENV === 'development',
       excludePaths: ['/health', '/favicon.ico'],
     }),
     'logger'

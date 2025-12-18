@@ -48,6 +48,7 @@ export interface RecentActivity {
   };
 }
 
+// 仪表盘概览响应
 export interface AdminOverviewResponse {
   stats: DashboardStats;
   userGrowth: UserGrowthData[];

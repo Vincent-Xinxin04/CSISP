@@ -1,4 +1,4 @@
-import type { Context, Next } from 'koa';
+import type { Context, Next } from './types';
 type RateLimitOptions = {
   windowMs?: number;
   max?: number;

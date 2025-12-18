@@ -66,7 +66,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted, onUnmounted, watch, markRaw } from 'vue';
+import { ref, reactive, onMounted, onUnmounted, watch } from 'vue';
 import { useMessage } from 'naive-ui';
 import { PageContainer } from '@/components';
 import { dashboardApi } from '@/api';
@@ -77,7 +77,8 @@ import type {
   RecentActivity,
 } from '@/api/dashboard';
 import * as echarts from 'echarts';
-import { PeopleOutline, BookOutline, CheckmarkCircleOutline, RefreshOutline } from '@vicons/ionicons5';
+import { defaultStatsCards, buildUserGrowthOption, buildCourseDistributionOption } from './config';
+import { getActivityType, formatActivityTime } from './utils';
 
 // 状态管理
 const message = useMessage();
@@ -105,29 +106,12 @@ const courseDistributionData = ref<CourseDistributionData[]>([]);
 const recentActivities = ref<RecentActivity[]>([]);
 
 // 统计卡片配置
-const statsCards = ref([
-  {
-    key: 'users',
-    label: '用户总数',
+const statsCards = ref(
+  defaultStatsCards.map(card => ({
+    ...card,
     value: 0,
-    icon: markRaw(PeopleOutline),
-    suffix: '',
-  },
-  {
-    key: 'courses',
-    label: '课程总数',
-    value: 0,
-    icon: markRaw(BookOutline),
-    suffix: '',
-  },
-  {
-    key: 'attendance',
-    label: '平均出勤率',
-    value: 0,
-    icon: markRaw(CheckmarkCircleOutline),
-    suffix: '%',
-  },
-]);
+  }))
+);
 
 // 图表实例
 let userGrowthChartInstance: echarts.ECharts | null = null;
@@ -174,43 +158,7 @@ const fetchDashboardData = async () => {
 const updateUserGrowthChart = () => {
   if (!userGrowthChartInstance || !userGrowthData.value.length) return;
 
-  const xAxisData = userGrowthData.value.map(item => item.date);
-  const seriesData = userGrowthData.value.map(item => item.count);
-
-  const option = {
-    tooltip: {
-      trigger: 'axis',
-      axisPointer: {
-        type: 'cross',
-      },
-    },
-    xAxis: {
-      type: 'category',
-      data: xAxisData,
-    },
-    yAxis: {
-      type: 'value',
-      name: '用户数',
-    },
-    series: [
-      {
-        name: '用户增长',
-        type: 'line',
-        data: seriesData,
-        smooth: true,
-        areaStyle: {
-          opacity: 0.3,
-        },
-      },
-    ],
-    grid: {
-      left: '3%',
-      right: '4%',
-      bottom: '3%',
-      containLabel: true,
-    },
-  };
-
+  const option = buildUserGrowthOption(userGrowthData.value);
   userGrowthChartInstance.setOption(option);
 };
 
@@ -218,49 +166,8 @@ const updateUserGrowthChart = () => {
 const updateCourseDistributionChart = () => {
   if (!courseDistributionChartInstance || !courseDistributionData.value.length) return;
 
-  const option = {
-    tooltip: {
-      trigger: 'item',
-    },
-    legend: {
-      orient: 'vertical',
-      left: 'left',
-    },
-    series: [
-      {
-        name: '课程分布',
-        type: 'pie',
-        radius: '50%',
-        data: courseDistributionData.value,
-        emphasis: {
-          itemStyle: {
-            shadowBlur: 10,
-            shadowOffsetX: 0,
-            shadowColor: 'rgba(0, 0, 0, 0.5)',
-          },
-        },
-      },
-    ],
-  };
-
+  const option = buildCourseDistributionOption(courseDistributionData.value);
   courseDistributionChartInstance.setOption(option);
-};
-
-// 获取活动类型
-const getActivityType = (type: string) => {
-  const typeMap: Record<string, any> = {
-    attendance: 'info',
-    homework: 'success',
-    notification: 'warning',
-    course: 'error',
-  };
-  return typeMap[type] || 'default';
-};
-
-// 格式化活动时间
-const formatActivityTime = (timestamp: string) => {
-  const date = new Date(timestamp);
-  return date.toLocaleString('zh-CN');
 };
 
 // 初始化图表

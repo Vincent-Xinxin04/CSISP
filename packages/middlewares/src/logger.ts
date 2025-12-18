@@ -1,7 +1,10 @@
-import type { Context, Next } from 'koa';
+import type { Context, Next } from './types';
+
 type LoggerOptions = { excludePaths?: string[]; logResponse?: boolean };
+
 export default function logger(options: LoggerOptions = {}) {
-  const { excludePaths = ['/health', '/favicon.ico'], logResponse = false } = options;
+  const { excludePaths = ['/health'], logResponse = false } = options;
+
   return async (ctx: Context, next: Next) => {
     if (excludePaths.some(p => ctx.path.startsWith(p))) return next();
     const s = Date.now();

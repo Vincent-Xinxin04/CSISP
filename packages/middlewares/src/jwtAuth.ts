@@ -1,4 +1,4 @@
-import type { Context, Next } from 'koa';
+import type { Context, Next } from './types';
 import jwt from 'jsonwebtoken';
 
 type JwtAuthOptions = {
@@ -8,7 +8,8 @@ type JwtAuthOptions = {
 };
 
 export default function jwtAuth(options: JwtAuthOptions = {}) {
-  const { required = false, roles = [], excludePaths = [] } = options;
+  const { required = true, roles = [], excludePaths = ['/api/users/login', '/api/users/register'] } = options;
+
   return async (ctx: Context, next: Next) => {
     if (excludePaths.length && excludePaths.includes(ctx.path)) return next();
 

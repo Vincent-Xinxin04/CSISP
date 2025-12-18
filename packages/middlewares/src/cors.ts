@@ -1,21 +1,24 @@
-import type { Context, Next } from 'koa';
+import type { Context, Next } from './types';
+
 type CorsOptions = {
   origin?: string | string[] | ((ctx: Context) => string);
-  credentials?: boolean;
   allowMethods?: string[];
   allowHeaders?: string[];
   exposeHeaders?: string[];
+  credentials?: boolean;
   maxAge?: number;
 };
+
 export default function cors(options: CorsOptions = {}) {
   const {
     origin = '*',
-    credentials = false,
-    allowMethods = ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
-    allowHeaders = ['Content-Type', 'Authorization', 'X-Requested-With'],
-    exposeHeaders = [],
+    allowMethods = ['GET', 'HEAD', 'PUT', 'POST', 'DELETE', 'PATCH'],
+    allowHeaders = ['Content-Type', 'Authorization', 'X-Trace-Id'],
+    exposeHeaders = ['Content-Length', 'Date', 'X-Request-Id'],
+    credentials = true,
     maxAge = 86400,
   } = options;
+
   return async (ctx: Context, next: Next) => {
     const reqOrigin = ctx.get('Origin');
     let allowed = false;

@@ -1,7 +1,10 @@
-import type { Context, Next } from 'koa';
+import type { Context, Next } from './types';
+
 type ErrorOptions = { showDetailsInDev?: boolean; logErrors?: boolean };
+
 export default function error(options: ErrorOptions = {}) {
   const { showDetailsInDev = true, logErrors = true } = options;
+
   return async (ctx: Context, next: Next) => {
     try {
       await next();

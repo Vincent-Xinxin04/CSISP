@@ -18,7 +18,8 @@ export default function legacyProxy() {
     // 仅处理以 /api/ 开头的路径；其它路径交由前端路由或静态资源处理
     const requestPath = ctx.path;
     if (!requestPath.startsWith('/api/')) return;
-    const backendBaseUrl = process.env.BE_BACKEND_URL as string;
+    const backendBaseUrl = process.env.BE_BACKEND_URL;
+    if (!backendBaseUrl) ctx.throw(500, 'BE_BACKEND_URL is not configured');
     const forwardHeaders: Record<string, string> = {};
     // 透传鉴权与链路追踪头
     const authorization = ctx.get('Authorization');
@@ -33,8 +34,14 @@ export default function legacyProxy() {
     if (contentType) forwardHeaders['Content-Type'] = contentType as string;
     if (cookie) forwardHeaders['Cookie'] = cookie as string;
     // 拼接后端 URL，保留查询参数
-    const base = backendBaseUrl.replace(/\/$/, '');
-    const forwardUrl = base + (ctx.querystring ? `${requestPath}?${ctx.querystring}` : requestPath);
+    const base = new URL(backendBaseUrl);
+    const basePath = base.pathname.replace(/\/$/, '');
+    const normalizedRequestPath =
+      basePath.endsWith('/api') && requestPath.startsWith('/api')
+        ? requestPath.slice('/api'.length) || '/'
+        : requestPath;
+    const urlPath = (basePath && basePath !== '/' ? basePath : '') + normalizedRequestPath;
+    const forwardUrl = `${base.origin}${ctx.querystring ? `${urlPath}?${ctx.querystring}` : urlPath}`;
     const body = (ctx.request as any).body;
     const method = ctx.method.toUpperCase();
     const init: any = { method, headers: forwardHeaders };

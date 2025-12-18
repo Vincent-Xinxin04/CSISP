@@ -1,4 +1,4 @@
-import type { Context, Next } from 'koa';
+import type { Context, Next } from './types';
 
 export const requireRole = (roles: string | string[]) => {
   const list = Array.isArray(roles) ? roles : [roles];
