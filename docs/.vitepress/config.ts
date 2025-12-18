@@ -2,6 +2,7 @@ import { defineConfig } from 'vitepress';
 
 export default defineConfig({
   title: 'CSISP 项目文档中心',
+  base: '/CSISP/',
   vite: {
     server: {
       port: 8173,
