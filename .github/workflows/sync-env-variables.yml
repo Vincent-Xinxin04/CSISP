@@ -6,16 +6,6 @@ name: Sync Env Variables From Example
 
 on:
   workflow_dispatch:
-    inputs:
-      environment:
-        description: Target environment (development|staging|production)
-        required: true
-        type: choice
-        options:
-          - development
-          - staging
-          - production
-        default: development
   push:
     branches:
       - main
@@ -35,14 +25,27 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # Detect environment from changed files on push (prefer file-based over branch mapping)
+      - name: Detect environment from changed files
+        id: detect_files
+        run: |
+          git fetch --depth=2 || true
+          base=$(git rev-parse HEAD~1 2>/dev/null || echo '')
+          files=$( [ -n "$base" ] && git diff --name-only "$base" HEAD || git ls-files )
+          env_name=""
+          for cand in production staging development; do
+            if echo "$files" | grep -q ".env.$cand.example"; then env_name="$cand"; break; fi
+          done
+          echo "env_name=$env_name" >> $GITHUB_OUTPUT
+
       # Determine environment: prefer manual input; otherwise map branch → environment
       - name: Resolve target environment name
         id: resolve_env
         uses: actions/github-script@v7
         with:
           script: |
-            const inputEnv = core.getInput('environment', { required: false })
-            let envName = inputEnv && inputEnv.trim()
+            const fromFiles = `${{ steps.detect_files.outputs.env_name }}`.trim()
+            let envName = fromFiles
             if (!envName) {
               const ref = context.ref
               if (ref === 'refs/heads/main') envName = 'production'
