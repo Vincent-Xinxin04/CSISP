@@ -1,7 +1,7 @@
-# Sync non-sensitive env variables to GitHub Environments
-# - Input selects target environment (development/staging/production)
-# - Prefer environment-specific example (.env.<env>.example); fallback to .env.example
-# - Filters out sensitive keys (PASSWORD/SECRET/TOKEN/KEY) — do not write Secrets here
+# 从示例环境变量文件同步非敏感变量到 GitHub Environment
+# - 按分支或变更文件自动解析目标环境（development/staging/production）
+# - 优先使用环境专用示例文件 (.env.<env>.example)，否则回退到 .env.example
+# - 过滤掉敏感键（PASSWORD/SECRET/TOKEN/KEY），这里只同步非敏感配置，Secrets 仍需放在 GitHub Secrets 中
 name: Sync Env Variables From Example
 
 on:
@@ -14,10 +14,11 @@ on:
     paths:
       - '.env.example'
       - '.env.*.example'
+      - '.github/workflows/sync-env-variables.yml'
 
 permissions:
-  actions: write # allow github-script to call environment variables API
-  contents: read # checkout repository to read example files
+  actions: write
+  contents: read
 
 jobs:
   sync-variables:
@@ -25,7 +26,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # Detect environment from changed files on push (prefer file-based over branch mapping)
+      # 根据变更的 env 示例文件推断目标环境（优先使用文件命名，而不是直接映射分支）
       - name: Detect environment from changed files
         id: detect_files
         run: |
@@ -38,7 +39,7 @@ jobs:
           done
           echo "env_name=$env_name" >> $GITHUB_OUTPUT
 
-      # Determine environment: prefer manual input; otherwise map branch → environment
+      # 解析目标环境名称：优先使用推断结果，否则根据分支映射到环境
       - name: Resolve target environment name
         id: resolve_env
         uses: actions/github-script@v7
@@ -54,7 +55,7 @@ jobs:
             }
             core.setOutput('env_name', envName)
 
-      # Pick environment-specific example file if present, else fallback
+      # 选择环境专用的示例文件（存在则用 .env.<env>.example，否则退回 .env.example）
       - name: Resolve environment-specific example path
         id: resolve
         run: |
@@ -65,7 +66,7 @@ jobs:
             echo "path=.env.example" >> $GITHUB_OUTPUT
           fi
 
-      # Parse global example first (base layer)
+      # 解析示例环境变量文件（过滤敏感字段，只构建非敏感变量的 payload）
       - name: Build non-sensitive payload from examples (Node)
         id: build_payload
         uses: actions/github-script@v7
@@ -97,7 +98,7 @@ jobs:
         env:
           ENV_FILE_PATH: ${{ steps.resolve.outputs.path }}
 
-      # Write variables to selected environment (env overrides global)
+      # 将非敏感变量写入目标 Environment（不存在则创建，存在则更新）
       - name: Sync variables to environment (env-specific overrides global)
         uses: actions/github-script@v7
         with:
@@ -122,16 +123,30 @@ jobs:
                 })
                 core.info(`Updated variable ${name}`)
               } else {
-                await github.request('POST /repos/{owner}/{repo}/environments/{environment_name}/variables', {
-                  owner, repo, environment_name: envName, headers, name, value
-                })
-                core.info(`Created variable ${name}`)
+                try {
+                  await github.request('POST /repos/{owner}/{repo}/environments/{environment_name}/variables', {
+                    owner, repo, environment_name: envName, headers, name, value
+                  })
+                  core.info(`Created variable ${name}`)
+                } catch (error) {
+                  const status = error?.status ?? error?.response?.status
+                  if (status === 409) {
+                    core.info(`Variable ${name} already exists, updating instead`)
+                    await github.request('PATCH /repos/{owner}/{repo}/environments/{environment_name}/variables/{name}', {
+                      owner, repo, environment_name: envName, name, headers, value
+                    })
+                    core.info(`Updated variable ${name}`)
+                  } else {
+                    throw error
+                  }
+                }
               }
             }
         env:
           ENV_NAME: ${{ steps.resolve_env.outputs.env_name }}
           PAYLOAD_JSON: ${{ steps.build_payload.outputs.json }}
 
+      # 验证目标 Environment 是否包含所有非敏感变量
       - name: Verify environment variables
         uses: actions/github-script@v7
         with:

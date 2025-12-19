@@ -17,7 +17,7 @@
 在首次克隆仓库后，建议根据当前操作系统执行对应的环境检查与配置脚本：
 
 ```bash
-bash init_env_[os].[ext]
+bash init_[os].[ext]
 ```
 
 ### 克隆仓库前的推荐 Git 配置（尤其是 Windows）
