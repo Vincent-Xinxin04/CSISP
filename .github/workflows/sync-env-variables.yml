@@ -113,11 +113,20 @@ jobs:
               return
             }
             const headers = { 'X-GitHub-Api-Version': '2022-11-28', 'Accept': 'application/vnd.github+json' }
+            const list = await github.request('GET /repos/{owner}/{repo}/environments/{environment_name}/variables', { owner, repo, environment_name: envName, headers })
+            const existing = new Set((list.data.variables || []).map(v => v.name))
             for (const [name, value] of Object.entries(payload)) {
-              await github.request('PUT /repos/{owner}/{repo}/environments/{environment_name}/variables/{name}', {
-                owner, repo, environment_name: envName, name, value, headers
-              })
-              core.info(`Set variable ${name}`)
+              if (existing.has(name)) {
+                await github.request('PATCH /repos/{owner}/{repo}/environments/{environment_name}/variables/{name}', {
+                  owner, repo, environment_name: envName, name, headers, value
+                })
+                core.info(`Updated variable ${name}`)
+              } else {
+                await github.request('POST /repos/{owner}/{repo}/environments/{environment_name}/variables', {
+                  owner, repo, environment_name: envName, headers, name, value
+                })
+                core.info(`Created variable ${name}`)
+              }
             }
         env:
           ENV_NAME: ${{ steps.resolve_env.outputs.env_name }}
