@@ -205,6 +205,7 @@ flowchart TB
 ```
 
 ### 5.5 监控与日志
+
 - 收集：结构日志（`method/path/status/duration traceId`），按路径聚合耗时与错误分布。
 - 告警：结合网关与实例层的 4xx/5xx 触发阈值；聚合接口设置 P95/P99 SLA。
 - trace-id：BFF 在入口生成并通过响应头 `X-Trace-Id` 返回给前端；同时在调用后端时携带该头，后端日志可与 BFF 日志依据该 ID 串联。

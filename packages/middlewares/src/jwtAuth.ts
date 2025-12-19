@@ -8,7 +8,11 @@ type JwtAuthOptions = {
 };
 
 export default function jwtAuth(options: JwtAuthOptions = {}) {
-  const { required = true, roles = [], excludePaths = ['/api/users/login', '/api/users/register'] } = options;
+  const {
+    required = true,
+    roles = [],
+    excludePaths = ['/api/users/login', '/api/users/register'],
+  } = options;
 
   return async (ctx: Context, next: Next) => {
     if (excludePaths.length && excludePaths.includes(ctx.path)) return next();

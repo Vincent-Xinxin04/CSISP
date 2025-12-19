@@ -4,8 +4,38 @@ set -euo pipefail
 ROOT_DIR=$(cd "$(dirname "$0")/../../.." && pwd)
 source "$ROOT_DIR/infra/database/scripts/common.sh"
 
-# 加载根环境（应用侧与容器侧统一来源）
 if [ -f "$ROOT_DIR/.env" ]; then export $(grep -v '^#' "$ROOT_DIR/.env" | xargs); fi
+
+if ! command -v docker >/dev/null 2>&1; then
+  log_info "检测到未安装 Docker，准备通过 Homebrew 安装 Docker Desktop"
+  if ! command -v brew >/dev/null 2>&1; then
+    log_error "未检测到 Homebrew，无法自动安装 Docker，请先手动安装 Homebrew 和 Docker Desktop"
+    exit 1
+  fi
+  brew install --cask docker
+fi
+
+if ! docker info >/dev/null 2>&1; then
+  log_info "启动 Docker Desktop"
+  open -a Docker
+  log_info "等待 Docker 服务就绪"
+  for i in {1..30}; do
+    if docker info >/dev/null 2>&1; then
+      log_success "Docker 服务已就绪"
+      break
+    fi
+    if [ "$i" -eq 30 ]; then
+      log_error "Docker 服务启动超时，请检查 Docker Desktop 状态"
+      exit 1
+    fi
+    sleep 2
+  done
+fi
+
+if ! docker compose version >/dev/null 2>&1; then
+  log_error "未检测到 docker compose，请升级 Docker Desktop 至支持 compose 的版本"
+  exit 1
+fi
 
 log_info "启动数据库服务"
 docker compose -f "$ROOT_DIR/infra/database/docker-compose.db.yml" --env-file "$ROOT_DIR/.env" up -d postgres redis

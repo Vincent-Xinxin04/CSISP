@@ -5,7 +5,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 dotenv.config({ path: path.resolve(__dirname, '../../.env'), override: false });
 dotenv.config({ path: path.resolve(__dirname, '.env'), override: false });
-dotenv.config({ path: path.resolve(__dirname, '.env.local'), override: false });
+dotenv.config({ path: path.resolve(__dirname, '.env.local'), override: true });
 /**
  * CSISP Backend Application Entry Point
  * 主要功能：
