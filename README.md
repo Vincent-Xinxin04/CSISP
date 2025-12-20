@@ -106,14 +106,16 @@ docker compose -f infra/database/docker-compose.db.yml exec -T postgres \
 
 ### 开发依赖后端的 BFF 子项目
 
-### 开发前端项目
-
-项目中前端项目依赖于 BFF 项目，因此在开发前端项目时，需要先启动 BFF 项目。
+项目中 BFF 子项目依赖于后端项目，因此在开发 BFF 项目时，需要先启动后端项目。
 
 ```bash
 # 启动 BFF 项目
 pnpm -F @csisp/bff dev
 ```
+
+### 开发前端项目
+
+项目中前端项目依赖于 BFF 项目，因此在开发前端项目时，需要先启动 BFF 项目。
 
 ```bash
 # 启动前端项目

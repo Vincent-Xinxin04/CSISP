@@ -4,10 +4,15 @@ set -e
 ROOT_DIR=$(cd "$(dirname "$0")" && pwd)
 cd "$ROOT_DIR"
 
-log_info() { printf "[INFO] %s\n" "$1"; }
-log_warn() { printf "[WARN] %s\n" "$1"; }
-log_error() { printf "[ERROR] %s\n" "$1" >&2; }
-log_success() { printf "[OK] %s\n" "$1"; }
+log_info() { printf "%s[INFO]%s %s\n" "$GREEN" "$RESET" "$1"; }
+log_warn() { printf "%s[WARN]%s %s\n" "$YELLOW" "$RESET" "$1"; }
+log_error() { printf "%s[ERROR]%s %s\n" "$RED" "$RESET" "$1" >&2; }
+log_success() { printf "%s[OK]%s %s\n" "$GREEN" "$RESET" "$1"; }
+
+RED=$'\033[31m'
+GREEN=$'\033[32m'
+YELLOW=$'\033[33m'
+RESET=$'\033[0m'
 
 if [ -f ".nvmrc" ]; then
   REQUIRED_NODE_MAJOR=$(tr -d ' v' < .nvmrc)
@@ -50,7 +55,7 @@ if command -v node >/dev/null 2>&1; then
     NODE_OK=1
     log_success "$NODE_STATUS"
   else
-    log_warn "已安装 Node.js $NODE_VERSION，期望主版本为 $REQUIRED_NODE_MAJOR.x"
+    log_warn "已安装 Node.js $NODE_VERSION, 期望主版本为 $REQUIRED_NODE_MAJOR.x"
     if command -v nvm >/dev/null 2>&1; then
       log_info "尝试通过 nvm 切换到 Node.js $REQUIRED_NODE_MAJOR"
       if nvm install "$REQUIRED_NODE_MAJOR" >/dev/null 2>&1 && nvm use "$REQUIRED_NODE_MAJOR" >/dev/null 2>&1; then
@@ -165,20 +170,17 @@ else
   log_error "$GIT_STATUS"
 fi
 
-printf "\n======== 环境检查结果汇总 ========\n"
-printf "Node.js: %s\n" "$NODE_STATUS"
-printf "pnpm: %s\n" "$PNPM_STATUS"
-printf "Docker: %s\n" "$DOCKER_STATUS"
-printf "Git: %s\n" "$GIT_STATUS"
+TOTAL=4
+COMPLETED=0
+if [ "$NODE_OK" -eq 1 ]; then COMPLETED=$((COMPLETED + 1)); fi
+if [ "$PNPM_OK" -eq 1 ]; then COMPLETED=$((COMPLETED + 1)); fi
+if [ "$DOCKER_OK" -eq 1 ]; then COMPLETED=$((COMPLETED + 1)); fi
+if [ "$GIT_OK" -eq 1 ]; then COMPLETED=$((COMPLETED + 1)); fi
 
-ALL_OK=1
-if [ "$NODE_OK" -ne 1 ]; then ALL_OK=0; fi
-if [ "$PNPM_OK" -ne 1 ]; then ALL_OK=0; fi
-if [ "$DOCKER_OK" -ne 1 ]; then ALL_OK=0; fi
-if [ "$GIT_OK" -ne 1 ]; then ALL_OK=0; fi
+printf "\n======== 环境检查结果汇总 [%d / %d] ========\n" "$COMPLETED" "$TOTAL"
 
-if [ "$ALL_OK" -eq 1 ]; then
-  printf "\n所有必需环境组件已就绪，可以继续进行项目开发。\n"
+if [ "$COMPLETED" -eq "$TOTAL" ]; then
+  printf "\n%s所有必需环境组件已就绪，可以继续进行项目开发。%s\n" "$GREEN" "$RESET"
   printf "\n推荐的后续操作：\n"
   printf "1) 安装依赖:\n   pnpm i\n"
   printf "2) 启动数据库基础设施:\n   bash infra/database/scripts/init_mac.sh\n"
@@ -186,5 +188,17 @@ if [ "$ALL_OK" -eq 1 ]; then
   printf "4) 启动 BFF 与后端服务:\n   pnpm -F @csisp/bff dev\n   pnpm -F @csisp/backend dev\n"
   printf "5) 启动前端项目:\n   pnpm -F @csisp/frontend-admin dev\n   pnpm -F @csisp/frontend-portal dev\n"
 else
-  printf "\n部分环境组件未正确配置，请根据上述提示先完成安装或修复。\n"
+  printf "\n%s未完成的环境组件及建议操作：%s\n" "$RED" "$RESET"
+  if [ "$NODE_OK" -ne 1 ]; then
+    printf "%s- Node.js: %s%s\n" "$RED" "$NODE_STATUS" "$RESET"
+  fi
+  if [ "$PNPM_OK" -ne 1 ]; then
+    printf "%s- pnpm: %s%s\n" "$RED" "$PNPM_STATUS" "$RESET"
+  fi
+  if [ "$DOCKER_OK" -ne 1 ]; then
+    printf "%s- Docker: %s%s\n" "$RED" "$DOCKER_STATUS" "$RESET"
+  fi
+  if [ "$GIT_OK" -ne 1 ]; then
+    printf "%s- Git: %s%s\n" "$RED" "$GIT_STATUS" "$RESET"
+  fi
 fi

@@ -105,21 +105,17 @@ if %errorlevel% equ 0 (
 )
 
 echo.
-echo ======== 环境检查结果汇总 ========
-echo Node.js: %NODE_STATUS%
-echo pnpm: %PNPM_STATUS%
-echo Docker: %DOCKER_STATUS%
-echo Git: %GIT_STATUS%
+set TOTAL=4
+set COMPLETED=0
+if "%NODE_OK%"=="1" set /a COMPLETED+=1
+if "%PNPM_OK%"=="1" set /a COMPLETED+=1
+if "%DOCKER_OK%"=="1" set /a COMPLETED+=1
+if "%GIT_OK%"=="1" set /a COMPLETED+=1
 
-set ALL_OK=1
-if not "%NODE_OK%"=="1" set ALL_OK=0
-if not "%PNPM_OK%"=="1" set ALL_OK=0
-if "%DOCKER_STATUS:~0,3%"=="未检" set ALL_OK=0
-if "%DOCKER_STATUS:~0,3%"=="未检" set ALL_OK=0
-if not "%GIT_OK%"=="1" set ALL_OK=0
+echo ======== 环境检查结果汇总 [%COMPLETED% / %TOTAL%] ========
 
 echo.
-if "%ALL_OK%"=="1" (
+if "%COMPLETED%"=="%TOTAL%" (
   echo 所有必需环境组件已检测完成，可继续进行项目开发。
   echo.
   echo 推荐的后续操作：
@@ -135,10 +131,13 @@ if "%ALL_OK%"=="1" (
   echo        pnpm -F @csisp/backend dev
   echo   5^)^ 启动前端项目:
   echo        pnpm -F @csisp/frontend-admin dev
-  echo        pnpm -F @csisp/frontend-portal dev
+  echo        pnpm -F @csisp-frontend-portal dev
 ) else (
-  echo 部分环境组件未正确配置，请根据上述提示完成安装或修复后再继续。
+  echo 未完成的环境组件及建议操作：
+  if not "%NODE_OK%"=="1" echo   - Node.js: %NODE_STATUS%
+  if not "%PNPM_OK%"=="1" echo   - pnpm: %PNPM_STATUS%
+  if not "%DOCKER_OK%"=="1" echo   - Docker: %DOCKER_STATUS%
+  if not "%GIT_OK%"=="1" echo   - Git: %GIT_STATUS%
 )
 
 endlocal
-
