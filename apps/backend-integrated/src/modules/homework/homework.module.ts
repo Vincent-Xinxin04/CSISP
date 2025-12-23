@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { RolesGuard } from '@common/guards/roles.guard';
 import { HomeworkController } from './homework.controller';
 import { HomeworkService } from './homework.service';
 
@@ -9,6 +10,12 @@ import { HomeworkService } from './homework.service';
  */
 @Module({
   controllers: [HomeworkController],
-  providers: [HomeworkService],
+  providers: [
+    {
+      provide: 'HOMEWORK_SERVICE',
+      useClass: HomeworkService,
+    },
+    RolesGuard,
+  ],
 })
 export class HomeworkModule {}

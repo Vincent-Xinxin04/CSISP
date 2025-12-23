@@ -8,7 +8,20 @@
     "skipLibCheck": true,
     "outDir": "dist",
     "rootDir": ".",
-    "types": ["node", "koa", "koa-bodyparser"]
+    "types": ["node", "koa", "koa-bodyparser"],
+    "baseUrl": "./",
+    "paths": {
+      "@router": ["src/router"],
+      "@middleware": ["src/middleware"],
+      "@middleware/*": ["src/middleware/*"],
+      "@controllers/*": ["src/controllers/*"],
+      "@services/*": ["src/services/*"],
+      "@clients/*": ["src/clients/*"],
+      "@schemas/*": ["src/schemas/*"],
+      "@validation": ["src/validation"],
+      "@validation/*": ["src/validation/*"],
+      "@utils/*": ["src/utils/*"]
+    }
   },
   "include": ["app.ts", "src"]
 }

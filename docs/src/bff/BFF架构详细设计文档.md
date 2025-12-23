@@ -1,4 +1,4 @@
-# CSISP 项目《BFF 架构详细设计文档》
+# BFF 架构详细设计文档
 
 ## 1. 架构概述
 
@@ -8,9 +8,9 @@
 - 路由前缀：统一对外暴露 `/api/bff/*`，并按前端场景分区：
   - 管理端（Admin）：`/api/bff/admin/*`
   - 门户端（Portal）：`/api/bff/portal/*`
-- 能力抽离：
-  - `@csisp/middlewares`：error、cors、logger、rateLimit、jwtAuth
-  - `@csisp/validation`：Zod 运行时校验适配器（query/body/params）
+- 核心能力模块：
+  - BFF 内部中间件：error、cors、logger、rateLimit、jwtAuth、trace（`apps/bff/src/middleware/*`）
+  - BFF 内部校验适配：基于 Zod 的 query/body/params/response 校验（`apps/bff/src/validation/*`、`apps/bff/src/schemas/*`）
   - `@csisp/upstream`：统一上游 HTTP 客户端封装
   - `@csisp/types`：公共 DTO/实体/响应类型
 - 数据编排：在服务层执行跨后端聚合与转换，输出统一响应模型。
@@ -87,15 +87,17 @@ sequenceDiagram
 代码索引：
 
 - 路由入口：`apps/bff/src/router/portal.ts:1-9`
-- 控制器：`apps/bff/src/controllers/portal/dashboard.controller.ts:1-8`
-- 服务聚合：`apps/bff/src/services/common/aggregation.service.ts:1-15`
-- 上游客户端：`apps/bff/src/clients/{course|attendance|homework|notification}.client.ts:1-5`
+- 控制器：`apps/bff/src/controllers/portal/dashboard.controller.ts`
+- 管理端仪表盘聚合服务示例：`apps/bff/src/services/admin/dashboard.service.ts`
+- 上游客户端工厂：`apps/bff/src/clients/bff.client.ts`
 
 ### 2.3 数据协议与格式
 
-- 输入校验：`@csisp/validation` 在路由入口执行校验，并写入 `ctx.state.query/body/params`
-  - `apps/bff/src/schemas/dashboard.schema.ts:1-7`
-  - `packages/validation/src/query.ts:1-10`
+- 输入校验：BFF 内部 validation 模块在路由入口执行校验，并写入 `ctx.state.query/body/params`
+  - 查询参数：`apps/bff/src/validation/query.ts`
+  - 请求体：`apps/bff/src/validation/body.ts`
+  - 路径参数：`apps/bff/src/validation/params.ts`
+  - 查询 schema 示例：`apps/bff/src/schemas/dashboard.schema.ts`
 - 输出契约：统一响应结构 `{ code, message, data }`；字段命名在服务层统一 `snake_case ↔ camelCase`（`apps/bff/src/utils/case.ts:1-14`）。
 
 ---
@@ -110,21 +112,26 @@ sequenceDiagram
 
 ### 3.2 中间件栈
 
-- 装配顺序（`apps/bff/app.ts:7-16`）：
+- 装配顺序（`apps/bff/app.ts:7-22`）：
   - `errorMiddleware()`：统一错误包装（开发环境可含 `stack`）
   - `corsMiddleware()`：跨域设置（来源/方法/头）
   - `loggerMiddleware()`：结构日志（`method/path/status/duration`）
+  - `traceMiddleware()`：注入与透传 `X-Trace-Id` 链路追踪 ID
   - `koa-bodyparser`
   - `jwtAuthMiddleware()`：鉴权与角色上下文绑定
   - `rateLimitMiddleware()`：滑窗限流（响应限流头）
   - `router.routes()/allowedMethods()`
-- 薄封装绑定：`apps/bff/src/middleware/index.ts:1-9`
-- 公共包实现：
-  - `packages/middlewares/src/error.ts:1-18`
-  - `packages/middlewares/src/cors.ts:1-44`
-  - `packages/middlewares/src/logger.ts:1-17`
-  - `packages/middlewares/src/rateLimit.ts:1-38`
-  - `packages/middlewares/src/jwtAuth.ts:1-6`
+  - `legacyProxy()`：在 BFF 未显式处理的 `/api/*` 请求上兜底转发到 backend-integrated
+- 薄封装绑定：`apps/bff/src/middleware/index.ts`
+- 中间件实现：
+  - 错误处理：`apps/bff/src/middleware/error.ts`
+  - 跨域：`apps/bff/src/middleware/cors.ts`
+  - 日志：`apps/bff/src/middleware/logger.ts`
+  - JWT 鉴权：`apps/bff/src/middleware/jwtAuth.ts`
+  - 角色/管理员校验：`apps/bff/src/middleware/roles.ts`
+  - 限流：`apps/bff/src/middleware/rateLimit.ts`
+  - 链路追踪：`apps/bff/src/middleware/trace.ts`
+  - 后端兜底代理：`apps/bff/src/middleware/legacyProxy.ts`
 
 ### 3.3 数据聚合与协议转换
 
@@ -137,10 +144,10 @@ sequenceDiagram
 
 ### 3.4 运行时校验与类型契约
 
-- 校验适配：`packages/validation/src/query.ts:1-10` 将校验结果写入 `ctx.state.query`
+- 校验适配：`apps/bff/src/validation/query.ts`/`body.ts`/`params.ts` 将校验结果写入 `ctx.state.query/body/params`
 - DTO 与类型：
   - 公共类型：`@csisp/types`（`packages/types/src/*`）
-  - 聚合类型：`apps/bff/src/types/index.ts:1-7` 引入 `Course[]/AttendanceStat/Homework[]`
+  - BFF 聚合类型与 schema：`apps/bff/src/schemas/admin/dashboard.schema.ts`、`apps/bff/src/services/admin/dashboard.service.ts`
 
 ---
 
@@ -171,10 +178,11 @@ sequenceDiagram
 
 ### 5.1 环境配置
 
-- `.env`（`apps/bff/.env`）：
-  - `BE_COURSE_URL/BE_ATT_URL/BE_HW_URL`
-  - `JWT_ISSUER`
-  - `BFF_PORT`（建议与后端不同端口，如 `4000`）
+- `.env`（根目录与 `apps/bff/.env` 叠加）：
+  - `BACKEND_INTEGRATED_URL`：指向 backend-integrated 的基础地址（如 `http://localhost:3100`）
+  - `BFF_PORT`：BFF 服务监听端口（建议与后端不同端口，如 `4000`）
+  - `JWT_SECRET`：JWT 签名密钥
+  - `REDIS_ENABLED`/`REDIS_HOST`/`REDIS_PORT`：可选 Redis 连接配置
 - 端口策略：对外由网关统一端口，内部 BFF/Backend 使用不同端口以便灰度与限流。
 
 ### 5.2 依赖与版本

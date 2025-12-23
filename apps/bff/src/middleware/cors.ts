@@ -1,5 +1,11 @@
-import type { Context, Next } from './types';
+import type { Context, Next } from 'koa';
 
+// CORS 中间件
+//
+// 作用：
+// - 为所有响应设置跨域相关响应头
+// - 支持自定义允许来源、方法、头部、是否携带凭证等
+// - 处理 OPTIONS 预检请求并返回 204
 type CorsOptions = {
   origin?: string | string[] | ((ctx: Context) => string);
   allowMethods?: string[];

@@ -1,5 +1,10 @@
-import type { Context, Next } from './types';
+import type { Context, Next } from 'koa';
 
+// 角色/权限相关中间件
+//
+// requireRole：
+// - 确保当前用户具备 roles 中至少一个角色，否则返回 403
+// - 依赖 jwtAuth 将 roles 写入 ctx.state.roles
 export const requireRole = (roles: string | string[]) => {
   const list = Array.isArray(roles) ? roles : [roles];
   return async (ctx: Context, next: Next) => {
@@ -13,6 +18,9 @@ export const requireRole = (roles: string | string[]) => {
   };
 };
 
+// requireAdmin：
+// - 判断当前用户是否具有 admin 角色，或用户名为 admin
+// - 不满足条件时返回 403，提示需要管理员权限
 export const requireAdmin = async (ctx: Context, next: Next) => {
   const roles: string[] = ((ctx.state as any)?.roles || []) as string[];
   const user = (ctx.state as any)?.user;

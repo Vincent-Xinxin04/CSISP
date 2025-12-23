@@ -1,5 +1,5 @@
 import type { Context } from 'koa';
-import { aggregateAdminOverview } from '../../services/admin/dashboard.service';
+import { aggregateAdminOverview } from '@services/admin/dashboard.service';
 
 export async function getAdminOverview(ctx: Context) {
   const q: any = (ctx.state as any)?.query || {};

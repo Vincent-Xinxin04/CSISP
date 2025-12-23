@@ -1,4 +1,4 @@
-import { Controller, Get, Query, UseGuards } from '@nestjs/common';
+import { Controller, Get, Inject, Query, UseGuards } from '@nestjs/common';
 import type { ApiResponse } from '@csisp/types';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { RolesGuard } from '@common/guards/roles.guard';
@@ -12,7 +12,7 @@ import { DashboardService } from './dashboard.service';
  */
 @Controller('dashboard')
 export class DashboardController {
-  constructor(private readonly dashboardService: DashboardService) {}
+  constructor(@Inject('DASHBOARD_SERVICE') private readonly dashboardService: DashboardService) {}
 
   @Get('stats')
   @UseGuards(JwtAuthGuard, RolesGuard)

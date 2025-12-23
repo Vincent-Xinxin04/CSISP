@@ -1,6 +1,15 @@
-import type { Context, Next } from './types';
+import type { Context, Next } from 'koa';
 import jwt from 'jsonwebtoken';
 
+// JWT 鉴权中间件
+//
+// 作用：
+// - 从 Authorization: Bearer <token> 头中解析并验证 JWT
+// - 将解码后的 userId/username/roles 写入 ctx.state，供后续中间件和路由使用
+// - 支持：
+//   - required=false 时允许匿名访问
+//   - roles 白名单校验，限制仅特定角色可访问
+//   - excludePaths 跳过指定路径（如登录/注册）
 type JwtAuthOptions = {
   required?: boolean;
   roles?: string[];

@@ -1,4 +1,16 @@
-import { Body, Controller, Get, Param, Post, Put, Query, Req, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Inject,
+  Logger,
+  Param,
+  Post,
+  Put,
+  Query,
+  Req,
+  UseGuards,
+} from '@nestjs/common';
 import type {
   CreateUserInput,
   LoginParams,
@@ -20,7 +32,13 @@ import { UserService } from './user.service';
  */
 @Controller('users')
 export class UserController {
-  constructor(private readonly userService: UserService) {}
+  private readonly userService: UserService;
+
+  private readonly logger = new Logger(UserController.name);
+
+  constructor(@Inject('USER_SERVICE') userService: UserService) {
+    this.userService = userService;
+  }
 
   @Post('register')
   async register(@Body() body: CreateUserInput): Promise<ApiResponse<any>> {
@@ -29,6 +47,10 @@ export class UserController {
 
   @Post('login')
   async login(@Body() body: LoginParams): Promise<ApiResponse<any>> {
+    this.logger.log(`login called, userService: ${this.userService ? 'ok' : 'undefined'}`);
+    if (!this.userService) {
+      return { code: 500, message: 'UserService not initialized' } as ApiResponse<any>;
+    }
     return this.userService.login(body);
   }
 

@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post, Put, Query, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Inject, Param, Post, Put, Query, UseGuards } from '@nestjs/common';
 import type {
   ApiResponse,
   CreateClassInput,
@@ -22,7 +22,7 @@ import { CourseService } from './course.service';
  */
 @Controller('courses')
 export class CourseController {
-  constructor(private readonly courseService: CourseService) {}
+  constructor(@Inject('COURSE_SERVICE') private readonly courseService: CourseService) {}
 
   @Post()
   @UseGuards(JwtAuthGuard, RolesGuard)

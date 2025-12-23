@@ -9,16 +9,16 @@ dotenv.config({ path: path.resolve(__dirname, '.env.local'), override: true });
 import Koa from 'koa';
 import bodyParser from 'koa-bodyparser';
 import { connect as connectRedis } from '@csisp/redis';
-import router from './src/router';
-import legacyProxy from './src/middleware/legacyProxy';
+import router from '@router';
+import legacyProxy from '@middleware/legacyProxy';
 import {
   errorMiddleware,
   corsMiddleware,
   loggerMiddleware,
   jwtAuthMiddleware,
   rateLimitMiddleware,
-} from './src/middleware';
-import traceMiddleware from './src/middleware/trace';
+} from '@middleware/index';
+import traceMiddleware from '@middleware/trace';
 
 const app = new Koa();
 if (process.env.REDIS_ENABLED === 'true') {

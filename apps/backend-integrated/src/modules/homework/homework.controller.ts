@@ -1,4 +1,15 @@
-import { Body, Controller, Delete, Get, Param, Post, Put, Query, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Inject,
+  Param,
+  Post,
+  Put,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
 import type {
   ApiResponse,
   CreateHomeworkInput,
@@ -20,7 +31,7 @@ import { HomeworkService } from './homework.service';
  */
 @Controller('homework')
 export class HomeworkController {
-  constructor(private readonly homeworkService: HomeworkService) {}
+  constructor(@Inject('HOMEWORK_SERVICE') private readonly homeworkService: HomeworkService) {}
 
   @Post()
   @UseGuards(JwtAuthGuard, RolesGuard)

@@ -1,8 +1,11 @@
 import Router from '@koa/router';
-import { getAdminOverview } from '../controllers/admin/dashboard.controller';
-import { jwtAuth, requireAdmin } from '@csisp/middlewares';
-import { validateQuery } from '@csisp/validation';
-import { AdminOverviewQuery } from '../schemas/dashboard.schema';
+import { getAdminOverview } from '@controllers/admin/dashboard.controller';
+import jwtAuth from '@middleware/jwtAuth';
+import { requireAdmin } from '@middleware/roles';
+import { validateQuery } from '@validation';
+import { AdminOverviewQuery } from '@schemas/dashboard.schema';
+import { validateBffResponse } from '@middleware/responseValidation';
+import { AdminOverviewResultSchema } from '@schemas/admin/dashboard.schema';
 
 const admin = new Router();
 admin.get(
@@ -10,6 +13,7 @@ admin.get(
   jwtAuth({ required: true }),
   requireAdmin,
   validateQuery(AdminOverviewQuery),
+  validateBffResponse(AdminOverviewResultSchema),
   getAdminOverview
 );
 

@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post, Put, Query, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Inject, Param, Post, Put, Query, UseGuards } from '@nestjs/common';
 import type {
   ApiResponse,
   AttendanceStatus,
@@ -19,7 +19,10 @@ import { AttendanceService } from './attendance.service';
  */
 @Controller('attendance')
 export class AttendanceController {
-  constructor(private readonly attendanceService: AttendanceService) {}
+  constructor(
+    @Inject('ATTENDANCE_SERVICE')
+    private readonly attendanceService: AttendanceService
+  ) {}
 
   @Post('tasks')
   @UseGuards(JwtAuthGuard, RolesGuard)

@@ -1,5 +1,17 @@
-import { error, cors, logger, jwtAuth, rateLimit } from '@csisp/middlewares';
+import error from './error';
+import cors from './cors';
+import logger from './logger';
+import jwtAuth from './jwtAuth';
+import rateLimit from './rateLimit';
 
+// BFF 统一中间件装配入口
+//
+// 提供便捷工厂函数，供 app.ts 在固定顺序下挂载各类中间件：
+// - errorMiddleware：统一错误包装
+// - corsMiddleware：跨域配置
+// - loggerMiddleware：访问日志
+// - jwtAuthMiddleware：JWT 鉴权
+// - rateLimitMiddleware：滑窗限流
 export const errorMiddleware = () =>
   error({ showDetailsInDev: process.env.NODE_ENV === 'development', logErrors: true });
 export const corsMiddleware = () => cors({});

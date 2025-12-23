@@ -1,64 +1,27 @@
 import { createHttpClient } from '@csisp/upstream';
+import { z } from 'zod';
+import {
+  AdminDashboardStatsSchema,
+  UserGrowthPointSchema,
+  CourseDistributionItemSchema,
+  RecentActivityItemSchema,
+  AdminOverviewResultSchema,
+} from '@schemas/admin/dashboard.schema';
 
 // Admin 仪表盘顶部统计卡片所需的核心指标
-export interface AdminDashboardStats {
-  // 系统用户总数
-  userCount: number;
-  // 课程总数（所有课程实例）
-  courseCount: number;
-  // 全局平均出勤率（0-100），由后端根据考勤记录计算
-  attendanceRate: number; // 百分比或小数，视后端接口而定
-  // 作业平均提交率（0-100），由后端根据作业与提交记录计算
-  homeworkSubmissionRate: number; // 百分比（0-100）
-  // 当前系统内通知条数（可用于提醒管理员未读或总通知数）
-  notificationCount: number;
-}
+export type AdminDashboardStats = z.infer<typeof AdminDashboardStatsSchema>;
 
 // 折线图：按日期聚合的用户增长数据点
-export interface UserGrowthPoint {
-  // 日期（YYYY-MM-DD）
-  date: string;
-  // 当日新增用户数量
-  count: number;
-}
+export type UserGrowthPoint = z.infer<typeof UserGrowthPointSchema>;
 
 // 饼图：课程分布（按某种维度聚合，如课程类型或学院）
-export interface CourseDistributionItem {
-  // 分组名称
-  name: string;
-  // 该分组下的课程数量
-  value: number;
-}
+export type CourseDistributionItem = z.infer<typeof CourseDistributionItemSchema>;
 
 // 时间线：最近活动流，混合展示考勤、作业、通知等事件
-export interface RecentActivityItem {
-  // 活动唯一标识
-  id: number;
-  // 活动类型，用于前端映射不同的展示样式
-  type: 'attendance' | 'homework' | 'notification' | 'course' | string;
-  // 列表主标题（例如“发布新作业”、“创建考勤任务”）
-  title: string;
-  // 辅助描述信息
-  description: string;
-  // 活动发生时间（ISO 字符串）
-  timestamp: string;
-  // 关联用户信息（如操作人或学生），可选字段
-  user?: { id: number; realName: string };
-}
+export type RecentActivityItem = z.infer<typeof RecentActivityItemSchema>;
 
 // Admin 概览聚合返回结构，供前端仪表盘一次性获取所有数据
-export interface AdminOverviewResult {
-  // 顶部统计卡片数据
-  stats: AdminDashboardStats;
-  // 用户增长折线图数据
-  userGrowth: UserGrowthPoint[];
-  // 课程分布饼图数据
-  courseDistribution: CourseDistributionItem[];
-  // 最近活动时间线数据
-  recentActivities: RecentActivityItem[];
-  // 若部分上游接口失败，将错误信息聚合在 meta 中
-  meta?: { error: string };
-}
+export type AdminOverviewResult = z.infer<typeof AdminOverviewResultSchema>;
 
 /**
  * Admin 概览聚合：并发拉取领域接口并计算统计数据

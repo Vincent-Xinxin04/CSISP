@@ -49,8 +49,7 @@ CSISP/
 │   ├── db-schema/            # 数据库迁移与 schema 定义
 │   ├── redis/                # @csisp/redis Redis 客户端封装
 │   ├── upstream/             # @csisp/upstream HTTP 上游封装
-│   ├── validation/           # 参数校验 schema 与工具
-│   └── utils/ / middlewares/ # 其他通用工具
+│   └── utils/                # @csisp/utils 其他通用工具
 └── infra/database/           # Postgres + Redis docker-compose 与脚本
 ```
 

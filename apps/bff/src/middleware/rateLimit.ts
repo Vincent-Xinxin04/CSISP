@@ -1,4 +1,11 @@
-import type { Context, Next } from './types';
+import type { Context, Next } from 'koa';
+
+// 简易滑窗限流中间件（内存实现）
+//
+// 作用：
+// - 按调用方标识（默认使用 ctx.ip）统计某时间窗口内的请求次数
+// - 当超过 max 次时返回 429，并在响应头中附带限流信息
+// - 支持按路径排除不参与限流的接口（如 /health）
 type RateLimitOptions = {
   windowMs?: number;
   max?: number;
@@ -6,7 +13,9 @@ type RateLimitOptions = {
   excludePaths?: string[];
   message?: string;
 };
+
 const store = new Map<string, { count: number; resetTime: number }>();
+
 export default function rateLimit(options: RateLimitOptions = {}) {
   const {
     windowMs = 60000,
@@ -15,6 +24,7 @@ export default function rateLimit(options: RateLimitOptions = {}) {
     excludePaths = ['/health'],
     message = 'Too Many Requests',
   } = options;
+
   return async (ctx: Context, next: Next) => {
     if (excludePaths.some(p => ctx.path.startsWith(p))) return next();
     const key = keyGenerator(ctx);
