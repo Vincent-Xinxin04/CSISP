@@ -89,7 +89,7 @@ sequenceDiagram
 - 路由入口：`apps/bff/src/router/portal.ts:1-9`
 - 控制器：`apps/bff/src/controllers/portal/dashboard.controller.ts`
 - 管理端仪表盘聚合服务示例：`apps/bff/src/services/admin/dashboard.service.ts`
-- 上游客户端工厂：`apps/bff/src/clients/bff.client.ts`
+- 上游客户端工厂：`apps/bff/src/infra/bff.client.ts`
 
 ### 2.3 数据协议与格式
 
@@ -113,10 +113,10 @@ sequenceDiagram
 ### 3.2 中间件栈
 
 - 装配顺序（`apps/bff/app.ts:7-22`）：
-  - `errorMiddleware()`：统一错误包装（开发环境可含 `stack`）
+  - `errorMiddleware()`：统一错误包装（开发环境可含 `stack`），并通过 `@infra/logger` 输出错误日志
   - `corsMiddleware()`：跨域设置（来源/方法/头）
-  - `loggerMiddleware()`：结构日志（`method/path/status/duration`）
-  - `traceMiddleware()`：注入与透传 `X-Trace-Id` 链路追踪 ID
+  - `loggerMiddleware()`：结构化访问日志（`method/path/status/duration/ip/traceId`，依赖 `@csisp/logger`）
+  - `traceMiddleware()`：注入与透传 `X-Trace-Id` 链路追踪 ID（写入 `ctx.state.traceId` 并回写响应头）
   - `koa-bodyparser`
   - `jwtAuthMiddleware()`：鉴权与角色上下文绑定
   - `rateLimitMiddleware()`：滑窗限流（响应限流头）
@@ -133,13 +133,14 @@ sequenceDiagram
   - 链路追踪：`apps/bff/src/middleware/trace.ts`
   - 后端兜底代理：`apps/bff/src/middleware/legacyProxy.ts`
 
-### 3.3 数据聚合与协议转换
+### 3.3 数据聚合、协议转换与日志
 
 - 聚合服务：`apps/bff/src/services/common/aggregation.service.ts:1-15`（并发 `course/attendance/homework`）
 - 客户端封装：`packages/upstream/src/http/client.ts:1-19`
-  - `createHttpClient({ baseURL })`
+  - `createHttpClient({ baseURL, headers, logger? })`
   - `get/post/put/del().json()`
   - 非 2xx 错误统一包装（`Upstream Error`）
+  - 若传入 `logger`，则通过 pino 输出结构化上游调用日志（`context: 'upstream', method, url, status, duration, traceId`）
 - 字段映射：`apps/bff/src/utils/case.ts:1-14`
 
 ### 3.4 运行时校验与类型契约
@@ -170,7 +171,10 @@ sequenceDiagram
 
 - 错误包装：统一 `{ code, message }`，避免泄漏后端细节。
 - 降级策略：非核心数据（如通知）可返回空集合或缓存数据。
-- 观测：结构日志与上游耗时打点；建议透传 `trace-id` 完成端到端追踪。
+- 观测：
+  - BFF 访问日志与错误日志通过 `@csisp/logger` 输出结构化 JSON，字段包括 `service/env/context/traceId/method/path/status/duration` 等；
+  - 上游 HTTP 调用通过 `@csisp/upstream` + `createBffHttpClient` 记录 `context: 'upstream'` 的日志，附带 `url/status/duration/traceId`；
+  - 前端可从响应头中的 `X-Trace-Id` 获取链路ID，在问题排查时与 BFF/Backend 日志对齐。
 
 ---
 

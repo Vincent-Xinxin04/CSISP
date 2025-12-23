@@ -266,18 +266,21 @@ createAttendanceTask(/* ... */) {}
 ### 4.3 日志与限流
 
 - `LoggingInterceptor`
-  - 在请求前后记录结构化日志（method、url、status、duration、userId 等）
-  - 输出至 `process.stdout/stderr`，便于集中收集
+  - 依赖 `@csisp/logger`（pino）输出结构化 JSON 日志
+  - 在请求前后记录 `method/url/status/duration/ip/userAgent` 等字段
+  - 从请求头透传/提取 `X-Trace-Id`，并通过 child logger 绑定 `traceId` 字段
+  - 日志示例字段：`{ service: 'backend-integrated', context: 'http', traceId, method, url, status, duration }`
 - `RateLimitInterceptor`
-  - 使用 Redis 或内存实现基础限流策略
-  - 默认可根据 IP / userId 做简单限流
+  - 使用内存 Map 或（未来）Redis 实现基础限流策略
+  - 默认按 `ip + method + url` 做滑窗计数，超过阈值返回 429，并附带 `X-RateLimit-*` 响应头
 
 ### 4.4 异常处理
 
 - `HttpExceptionFilter`
   - 捕获 `HttpException` 与未知异常
   - 统一输出形如 `ApiResponse` 的结构：`{ code, message, data? }`
-  - 根据环境控制是否输出详细错误信息
+  - 使用 `@infra/logger` 暴露的后端 logger（`getBackendLogger('error', traceId)`）输出错误日志
+  - 错误日志字段包含：`method/url/status/userId/errorName/errorMessage/traceId`，便于与 BFF 日志按 traceId 串联
 
 ---
 

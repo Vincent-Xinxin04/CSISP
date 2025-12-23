@@ -1,4 +1,5 @@
 import type { Context, Next } from 'koa';
+import { getRequestLogger } from '@infra/logger';
 
 // 访问日志中间件
 //
@@ -13,17 +14,24 @@ export default function logger(options: LoggerOptions = {}) {
 
   return async (ctx: Context, next: Next) => {
     if (excludePaths.some(p => ctx.path.startsWith(p))) return next();
-    const s = Date.now();
+    const start = Date.now();
     await next();
-    const ms = Date.now() - s;
-    const traceId = (ctx.state as any)?.traceId;
-    const base = `${ctx.method} ${ctx.path} ${ctx.status} ${ms}ms${
-      traceId ? ` traceId=${traceId}` : ''
-    }`;
+    const ms = Date.now() - start;
+    const log = getRequestLogger(ctx);
+
+    const payload: Record<string, unknown> = {
+      context: 'http',
+      method: ctx.method,
+      path: ctx.path,
+      status: ctx.status,
+      duration: ms,
+      ip: ctx.ip,
+    };
+
     if (logResponse && ctx.body) {
-      process.stdout.write(`${base} body=${JSON.stringify(ctx.body).slice(0, 500)}\n`);
-    } else {
-      process.stdout.write(`${base}\n`);
+      payload.responsePreview = JSON.stringify(ctx.body).slice(0, 500);
     }
+
+    log.info(payload, 'HTTP request');
   };
 }

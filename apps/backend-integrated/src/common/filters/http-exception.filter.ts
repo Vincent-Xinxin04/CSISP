@@ -5,19 +5,11 @@
  * 将其转换为统一的 { code, message } 响应结构，
  * 并通过 Nest Logger 输出错误日志。
  */
-import {
-  ArgumentsHost,
-  Catch,
-  ExceptionFilter,
-  HttpException,
-  HttpStatus,
-  Logger,
-} from '@nestjs/common';
+import { ArgumentsHost, Catch, ExceptionFilter, HttpException, HttpStatus } from '@nestjs/common';
+import { getBackendLogger } from '@infra/logger';
 
 @Catch()
 export class HttpExceptionFilter implements ExceptionFilter {
-  private readonly logger = new Logger(HttpExceptionFilter.name);
-
   catch(exception: unknown, host: ArgumentsHost): void {
     const ctx = host.switchToHttp();
     const response: any = ctx.getResponse();
@@ -42,15 +34,25 @@ export class HttpExceptionFilter implements ExceptionFilter {
       message = '参数验证失败';
     }
 
-    const logPayload = {
-      method: request.method,
-      url: request.url,
-      userAgent: request.headers['user-agent'],
-      ip: request.ip,
-      userId: request.userId ?? request.user?.id ?? null,
-      status,
-    };
-    this.logger.error(`Request failed: ${JSON.stringify(logPayload)}`, (exception as any)?.stack);
+    const traceId: string | undefined =
+      request.headers?.['x-trace-id'] ??
+      request.headers?.['X-Trace-Id'] ??
+      request.headers?.['x-traceid'];
+    const logger = getBackendLogger('error', traceId);
+
+    logger.error(
+      {
+        method: request.method,
+        url: request.url,
+        userAgent: request.headers['user-agent'],
+        ip: request.ip,
+        userId: request.userId ?? request.user?.id ?? null,
+        status,
+        errorMessage: (exception as any)?.message ?? undefined,
+        errorName: (exception as any)?.name ?? undefined,
+      },
+      'Request failed'
+    );
 
     response.status(status).json({
       code,

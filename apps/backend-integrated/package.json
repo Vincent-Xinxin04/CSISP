@@ -10,6 +10,7 @@
     "format": "pnpm exec eslint . --fix && pnpm exec prettier --write ."
   },
   "dependencies": {
+    "@csisp/logger": "workspace:*",
     "@csisp/redis": "workspace:*",
     "@csisp/types": "workspace:^1.0.0",
     "@nestjs/common": "^10.4.0",

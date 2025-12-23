@@ -1,4 +1,4 @@
-import { createHttpClient } from '@csisp/upstream';
+import { createBffHttpClient } from '@infra/bff.client';
 import { z } from 'zod';
 import {
   AdminDashboardStatsSchema,
@@ -43,10 +43,7 @@ export async function aggregateAdminOverview(
   const headers: Record<string, string> = {};
   if (traceId) headers['X-Trace-Id'] = traceId;
   if (authHeader) headers['Authorization'] = authHeader;
-  const backendClient = createHttpClient({
-    baseURL: process.env.BACKEND_INTEGRATED_URL as string,
-    headers,
-  });
+  const backendClient = createBffHttpClient(headers, traceId);
   // BFF 兜底返回结构：即使部分上游接口失败，也保证字段完整
   const defaults: AdminOverviewResult = {
     stats: {
